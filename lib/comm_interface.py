@@ -5,6 +5,7 @@ import serial
 import struct
 import numpy as np
 import logging
+import datetime
 
 # Start logger
 logger = logging.getLogger('PC.COMM')
@@ -23,12 +24,14 @@ class SerialInterface(object):
     """ Main serial interface
     """
 
-    def __init__(self):
+    def __init__(self, mode):
         self._port = None
         self._timeout = 0.5
         self._baudraute = 115200
         self._parity = 'N'
         self._stop_bits = 1
+        self._mode = int(mode)
+        self._online = False
 
 
     def open_port(self, port):
@@ -51,23 +54,35 @@ class SerialInterface(object):
 
 
     def connect_device(self):
-        """ Connect to device
+        """ Connect and start device
         """
         
-        logger.info("Connecting...")
-        self._comm.write(b'CONNECT\r\n')
-        '''time.sleep(0.5)
-        print(self._port, ": ", self._comm.readline())
-        time.sleep(2)
+        logger.info("Stopping and resetting device")
+        self._comm.write(b'STOP\r\n') # Stop any ongoing reading
+        self._comm.reset_input_buffer() # flush buffer
 
-        logger.info("Start sensor reading...")
-        self._comm.write(b'START 0\r\n')
-        time.sleep(2)
-        print(self._port, ": ", self._comm.readline())
-        print(self._port, ": ", self._comm.readline())
-        time.sleep(0.5)'''
+        logger.info("Connecting")
+        # Send CONNECTED command and wait for ACK
+        self._comm.write(b'CONNECT\r\n')
+
+        # Sometimes it takes up to 3 seconds... :(
+        if not (self.wait_for_text_timeout("CONNECTED ", 3.0) and self.wait_for_text_timeout(">", 3.0)):
+            logger.error("Could not connect to board")
+            self._online = False
+            return False
+
+        # Send START command
+        logger.info("Start sensor reading [MODE " + str(self._mode) + " - " + ("SLOW", "FAST")[self._mode] + "]")
+        self._comm.write(bytes("START {}\r\n".format(self._mode), 'utf8'))
+        
+        if not self.wait_for_text_timeout("Start Measurements", 0.6):
+            logger.error("Could not start reading")
+            self._online = False
+            return False
 
         logger.info("Initialization complete!")
+        self._online = True
+        return True
 
 
     def close_port(self):
@@ -76,29 +91,6 @@ class SerialInterface(object):
 
         if self._comm != None:
             self._comm.close()
-
-
-    def send_serial_data(self, d):
-        """ Send data to serial port.
-        """
-
-        # Aquire lock
-        self._lock.acquire()
-        logger.debug(" --- Sending data ---")
-
-        start_t = time.time()
-
-        # First send the number of data points to be sent
-        # Pack the length into 4 bytes
-        self._comm.write(struct.pack('<I', len(d)))
-
-        # for i in tqdm(range(len(d))):
-        for i in range(len(d)):
-            self._comm.write(struct.pack('<B', d[i]))
-        
-        logger.debug("\t[" + str(len(d)) + " bytes sent in " + str(time.time() - start_t) + " ms]")
-        logger.debug(" -- END Sending data --")
-        self._lock.release()
 
 
     def receive_serial_data(self, size):
@@ -153,12 +145,27 @@ class SerialInterface(object):
 
         read_string = ''
         try:
-            #read_string = self._comm.read_until().decode('utf-8').rstrip("\n")
-            read_string = self._comm.readline().decode('ascii')
+            read_string = self._comm.readline().decode('ascii').rstrip("\r\n")
         except:
             pass
         
         return read_string
+
+    def wait_for_text_timeout(self, txt, timeout_s):
+        """ Wait for a specific text/pattern. Timeout given in seconds
+
+            :returns:
+                true if there was a match, false for a timeout
+        """
+        
+        t0 = datetime.datetime.now()
+        timeout_us = timeout_s * 1000000
+       
+        while ((datetime.datetime.now() - t0).microseconds < timeout_us):             
+            if(self.read_text() == txt):
+                return True
+
+        return False
 
 
 def list_available_ports():
