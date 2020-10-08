@@ -41,6 +41,4 @@ if __name__ == "__main__":
 
     # Main loop
     while True:
-        rec = comm.read_text()
-        if rec is not '':
-            logger.info(rec)
+        comm.process_data()

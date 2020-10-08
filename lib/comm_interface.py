@@ -7,10 +7,17 @@ import numpy as np
 import logging
 import datetime
 
-# Start logger
+# Start serial logger
 logger = logging.getLogger('PC.COMM')
 logger.setLevel(logging.INFO)
 
+# Start data logger -> File
+data_logger = logging.getLogger('PC.DATA')
+data_logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("spam.log")
+fh.setLevel(logging.DEBUG)
+data_logger.addHandler(fh) # Print content to file
+data_logger.propagate = False # Very ugly solution, but it works...
 
 ################################################
 # SERIAL COMMUNICATION                         #
@@ -25,6 +32,7 @@ class SerialInterface(object):
     """
 
     def __init__(self, mode):
+        self._comm = None
         self._port = None
         self._timeout = 0.5
         self._baudraute = 115200
@@ -56,6 +64,9 @@ class SerialInterface(object):
     def connect_device(self):
         """ Connect and start device
         """
+
+        if self._comm is None:
+            return False
         
         logger.info("Stopping and resetting device")
         self._comm.write(b'STOP\r\n') # Stop any ongoing reading
@@ -93,44 +104,33 @@ class SerialInterface(object):
             self._comm.close()
 
 
-    def receive_serial_data(self, size):
-        """ Receive data from serial port.
-
-            :returns:
-                Numpy array with the received data (1 dimensional)
+    def process_data(self):
+        """ Process the data received from the MCU
         """
 
-        if self._comm == None:
-            return np.array([])
+        if self._comm is None:
+            return False
 
-        logger.debug(" --- Receiving data ---")
-        logger.debug("\t[Expecting " + str(size) + " bytes]")
+        recv = self.read_text()
+        if recv is '':
+            return False
 
-        # start with a dict, as it is easier to append values
-        recv_data = []
-        bytes_received = 0
-        # for i in tqdm(range(size)):
-        for i in range(size):
-            data = self._comm.read(1)
-            if len(data) == 0 and len(recv_data) != 0:
-                break
-            elif len(data) != 0:
-                # Unpack data
-                recv_data.append(struct.unpack('>B', data))
-                bytes_received = bytes_received + 1
+        list_data = recv.split('\t') # Data separated by tabs
+        n = len(list_data) # Number of elements
 
-        logger.debug("\t[" + str(bytes_received) + "/" + str(size) + " bytes received]")
+        # We always receive 10 data elements
+        if n != 10:
+            logger.error("Wrong data received! Skipping [{}]".format(recv))
+            return False
 
-        if bytes_received != size:
-            logger.debug("\tFilling missing data with zeros")
-            for i in range(size - bytes_received):
-                # Append a tuple, since struct.unpack also returns a tuple
-                recv_data.append((0,))
+        list_data = list_data[1:n - 1] # First and last elements are garbage
 
-        logger.debug(" -- END Receiving data --")
+        log_text = ""
+        for i in list_data:
+            log_text = log_text + "[" + str(i) + "],"
 
-        # Transform dict to numpy array
-        return np.array(recv_data).astype('uint8')
+        data_logger.debug(log_text)
+        logger.info(log_text)
 
 
     def read_text(self):
