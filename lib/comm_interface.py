@@ -1,9 +1,6 @@
 import sys
 import glob
-import time
 import serial
-import struct
-import numpy as np
 import logging
 import datetime
 
@@ -60,6 +57,14 @@ class SerialInterface(object):
 
         return True
 
+
+    def is_connected(self):
+        """ Check if there is a port connected
+
+            :returns:
+                Return true if it is connected
+        """
+        return self._comm is not None
 
     def connect_device(self):
         """ Connect and start device

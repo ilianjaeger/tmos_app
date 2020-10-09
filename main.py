@@ -30,7 +30,7 @@ if __name__ == "__main__":
     logging.info("----- STARTING OUR COOL PROGRAM -----\n")
 
     comm = comm_interface.SerialInterface(args.stream_m)
-    if comm.open_port(args.port_name) == False:
+    if not comm.open_port(args.port_name):
         logging.error("An error occurred while opening the port. Closing...")
         exit()
 

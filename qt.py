@@ -2,37 +2,25 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 import logging
 
-# Uncomment below for terminal log messages
-# logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(name)s - %(levelname)s - %(message)s')    
+from lib import QtLogger
+from lib import qtSensor
 
-class QPlainTextEditLogger(logging.Handler):
-    def __init__(self, parent):
-        super().__init__()
-        self.widget = QtWidgets.QPlainTextEdit(parent)
-        self.widget.setReadOnly(True)    
+logging.getLogger().setLevel(logging.DEBUG)
 
-    def emit(self, record):
-        msg = self.format(record)
-        self.widget.appendPlainText(msg)    
-
-
-class MyDialog(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args):
         QtWidgets.QWidget.__init__(self, *args)
 
-        logTextBox = QPlainTextEditLogger(self)
-        # You can format what is printed to text box
-        logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logging.getLogger().addHandler(logTextBox)
-        # You can control the logging level
-        logging.getLogger().setLevel(logging.DEBUG)
+        log_text_box = QtLogger.QLoggerBox(self)
+        sensor_box = qtSensor.QtSensor("Sensor 1", self)
 
         self._button = QtWidgets.QPushButton(self)
         self._button.setText('Test Me')    
 
         layout = QtWidgets.QVBoxLayout()
-        # Add the new logging box widget to the layout
-        layout.addWidget(logTextBox.widget)
+
+        layout.addWidget(sensor_box)
+        layout.addWidget(log_text_box.widget)
         layout.addWidget(self._button)
         self.setLayout(layout)    
 
@@ -45,8 +33,8 @@ class MyDialog(QtWidgets.QWidget):
         logging.warning('that\'s not right')
         logging.error('foobar')
 
-if (__name__ == '__main__'):
+if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    dlg = MyDialog()
-    dlg.show()
+    main_window = MainWindow()
+    main_window.show()
     sys.exit(app.exec_())
