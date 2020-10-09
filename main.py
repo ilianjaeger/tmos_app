@@ -8,7 +8,6 @@ import time
 import sys
 import logging
 
-from lib import PIR
 from lib import comm_interface
 
 # Initialize logger
