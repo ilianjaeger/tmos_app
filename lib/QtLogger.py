@@ -1,7 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 import logging
 
-# The color "palette"
+# Logging colors
 COLORS = {
     'WARNING': "orange",
     'INFO': "black",
@@ -9,6 +9,7 @@ COLORS = {
     'CRITICAL': "orange",
     'ERROR': "red"
 }
+
 
 class QLoggerBox(logging.Handler):
     def __init__(self, parent):
