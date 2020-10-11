@@ -1,9 +1,32 @@
 import logging
 import threading
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from lib import serial_interface
+
+
+class QtReadSensor(QtCore.QThread):
+    def __init__(self, comm_handler, title):
+        QtCore.QThread.__init__(self)
+        self.comm = comm_handler
+
+        # Data logger
+        self.data_logger = logging.getLogger(title.replace(" ", "_").upper())
+        self.data_logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(title.replace(" ", "_").upper() + ".log")
+        fh.setLevel(logging.DEBUG)
+        self.data_logger.addHandler(fh)  # Print content to file
+        self.data_logger.propagate = False  # Very ugly solution, but it works...
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        while True:
+            data = self.comm.process_data()
+            if data != '':
+                self.data_logger.debug(data)
 
 
 class QtSensor(QtWidgets.QWidget):
@@ -80,6 +103,8 @@ class QtSensor(QtWidgets.QWidget):
 
         ''' BIND SIGNALS '''
         self.comm.error_signal.connect(self.serial_error_signal)
+        
+        self.read_thread = QtReadSensor(self.comm, title)
 
     def port_selection_change(self, i):
         if self.comm.is_connected():
@@ -105,6 +130,7 @@ class QtSensor(QtWidgets.QWidget):
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting...')
         self.comm.close_port()
+        self.read_thread.terminate()
 
         self.disconnect_button.setEnabled(False)
         self.connect_button.setEnabled(True)
@@ -124,6 +150,8 @@ class QtSensor(QtWidgets.QWidget):
         self.stop_button.setEnabled(True)
         self.start_button.setEnabled(False)
 
+        self.read_thread.start()
+
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
 
@@ -134,6 +162,8 @@ class QtSensor(QtWidgets.QWidget):
         self.stop_button.setEnabled(False)
         self.start_button.setEnabled(True)
 
+        self.read_thread.terminate()
+
     def serial_error_signal(self):
         self.logger.error("Serial error! Closing port")
 
@@ -141,3 +171,5 @@ class QtSensor(QtWidgets.QWidget):
         self.connect_button.setEnabled(True)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
+
+        self.read_thread.terminate()

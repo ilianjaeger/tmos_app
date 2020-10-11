@@ -8,7 +8,7 @@ from PyQt5 import QtCore
 
 # Start serial logger
 logger = logging.getLogger('PC.COMM')
-# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Start data logger -> File
 data_logger = logging.getLogger('PC.DATA')
@@ -164,12 +164,12 @@ class SerialInterface(QtCore.QObject):
         """
 
         if not self.is_connected():
-            return False
+            return ''
 
         try:
             recv = self.read_text()
             if recv is '':
-                return False
+                return ''
 
             list_data = recv.split('\t')  # Data separated by tabs
             n = len(list_data)  # Number of elements
@@ -177,7 +177,7 @@ class SerialInterface(QtCore.QObject):
             # We always receive 10 data elements
             if n != 10:
                 logger.error("Wrong data received! Skipping [{}]".format(recv))
-                return False
+                return ''
 
             list_data = list_data[1:n - 1]  # First and last elements are garbage
 
@@ -191,9 +191,9 @@ class SerialInterface(QtCore.QObject):
         except serial.SerialException:
             self._comm = None
             self.emit_error_signal()
-            return False
+            return ''
 
-        return True
+        return log_text
 
     def read_text(self):
         """ Receive text from serial port.
@@ -209,6 +209,9 @@ class SerialInterface(QtCore.QObject):
             read_string = self._comm.readline().decode('ascii').rstrip("\r\n")
         except serial.SerialException:
             self._comm = None
+            return ''
+        except UnicodeDecodeError:
+            logger.error("Can't decode text")
             return ''
 
         return read_string

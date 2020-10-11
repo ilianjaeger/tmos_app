@@ -5,6 +5,7 @@ import logging
 from lib import QtLogger
 from lib import QtSensor
 
+# Initialize logger
 logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -37,6 +38,3 @@ if __name__ == '__main__':
     main_window = MainWindow()
     main_window.show()
     app.exec_()
-
-    parent = psutil.Process(os.getpid())
-    parent.kill()
