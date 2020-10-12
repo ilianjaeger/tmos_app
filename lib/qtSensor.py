@@ -1,32 +1,9 @@
 import logging
-import threading
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 
 from lib import serial_interface
-
-
-class QtReadSensor(QtCore.QThread):
-    def __init__(self, comm_handler, title):
-        QtCore.QThread.__init__(self)
-        self.comm = comm_handler
-
-        # Data logger
-        self.data_logger = logging.getLogger(title.replace(" ", "_").upper())
-        self.data_logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(title.replace(" ", "_").upper() + ".log")
-        fh.setLevel(logging.DEBUG)
-        self.data_logger.addHandler(fh)  # Print content to file
-        self.data_logger.propagate = False  # Very ugly solution, but it works...
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        while True:
-            data = self.comm.process_data()
-            if data != '':
-                self.data_logger.debug(data)
+from lib import QtSerialThread
 
 
 class QtSensor(QtWidgets.QWidget):
@@ -99,12 +76,11 @@ class QtSensor(QtWidgets.QWidget):
         self.vbox.addLayout(self.hbox_start_stop_buttons)
 
         ###################################################################
-        self.comm = serial_interface.SerialInterface(0)
-
         ''' BIND SIGNALS '''
-        self.comm.error_signal.connect(self.serial_error_signal)
-        
-        self.read_thread = QtReadSensor(self.comm, title)
+        self.serial_thread = QtSerialThread.QtSerialThread(title)
+        self.serial_thread.serial_response.connect(self.serial_response_received)
+
+        self.serial_thread.start()
 
     def port_selection_change(self, i):
         if self.comm.is_connected():
@@ -112,64 +88,89 @@ class QtSensor(QtWidgets.QWidget):
                 "Changed to port " + str(self.com_port_list.currentText()) + ". Disconnect and connect to apply changes")
 
     def connect_button_clicked(self):
-        if self.com_port_list.currentText() == "":
+        '''if self.com_port_list.currentText() == "":
             self.logger.warning("No available COM port found!")
-            return
+            return'''
 
         self.logger.info('Connecting...')
-        if not self.comm.open_port(self.com_port_list.currentText()):
-            self.logger.error("An error occurred while opening the port!")
-            return
-
-        self.connect_button.setEnabled(False)
-        self.disconnect_button.setEnabled(True)
-
-        self.start_button.setEnabled(True)
-        self.stop_button.setEnabled(False)
+        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['connect'], self.com_port_list.currentText())
 
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting...')
-        self.comm.close_port()
-        self.read_thread.terminate()
-
-        self.disconnect_button.setEnabled(False)
-        self.connect_button.setEnabled(True)
-
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(False)
-
-        self.logger.warning('Device successfully disconnected...')
+        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['disconnect'], '')
 
     def start_button_clicked(self):
         self.logger.info('Starting...')
-
-        if not self.comm.connect_device():
-            self.logger.error("An error occurred while trying to start the reading")
-            return
-
-        self.stop_button.setEnabled(True)
-        self.start_button.setEnabled(False)
-
-        self.read_thread.start()
+        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['start'], '')
 
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
+        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
 
-        if not self.comm.stop_device():
-            self.logger.error("An error occurred while trying to stop the reading")
-            return
+    def serial_response_received(self, resp, success):
+        if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
+            self.serial_connected(success)
+        elif resp == QtSerialThread.SERIAL_RESPONSE['disconnected']:
+            self.serial_disconnected(success)
+        elif resp == QtSerialThread.SERIAL_RESPONSE['started']:
+            self.serial_started(success)
+        elif resp == QtSerialThread.SERIAL_RESPONSE['stopped']:
+            self.serial_stopped(success)
+        else:
+            self.serial_error_signal()
 
-        self.stop_button.setEnabled(False)
-        self.start_button.setEnabled(True)
+    def serial_connected(self, success):
+        if success:
+            self.logger.info("Successfully connected!")
 
-        self.read_thread.terminate()
+            self.connect_button.setEnabled(False)
+            self.disconnect_button.setEnabled(True)
+            self.start_button.setEnabled(True)
+            self.stop_button.setEnabled(False)
+        else:
+            self.logger.error("Could not connect!")
 
-    def serial_error_signal(self):
-        self.logger.error("Serial error! Closing port")
+            self.connect_button.setEnabled(True)
+            self.disconnect_button.setEnabled(False)
+            self.start_button.setEnabled(False)
+            self.stop_button.setEnabled(False)
 
-        self.disconnect_button.setEnabled(False)
+    def serial_disconnected(self, success):
+        if success:
+            self.logger.info("Successfully disconnected!")
+        else:
+            self.logger.error("Could not connect!")
+
         self.connect_button.setEnabled(True)
+        self.disconnect_button.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
 
-        self.read_thread.terminate()
+    def serial_started(self, success):
+        if success:
+            self.logger.info('Successfully started!')
+
+            self.start_button.setEnabled(False)
+            self.stop_button.setEnabled(True)
+        else:
+            self.logger.error("Could not start!")
+
+            self.start_button.setEnabled(True)
+            self.stop_button.setEnabled(False)
+
+    def serial_stopped(self, success):
+        if success:
+            self.logger.info('Successfully stopped!')
+        else:
+            self.logger.error("Could not stop!")
+
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+
+    def serial_error_signal(self):
+        self.logger.error("Serial error! Resetting...")
+
+        self.connect_button.setEnabled(True)
+        self.disconnect_button.setEnabled(False)
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(False)

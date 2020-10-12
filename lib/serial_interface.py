@@ -18,7 +18,6 @@ fh.setLevel(logging.DEBUG)
 data_logger.addHandler(fh)  # Print content to file
 data_logger.propagate = False  # Very ugly solution, but it works...
 
-
 ################################################
 # SERIAL COMMUNICATION                         #
 #                                              #
@@ -30,9 +29,6 @@ data_logger.propagate = False  # Very ugly solution, but it works...
 class SerialInterface(QtCore.QObject):
     """ Main serial interface
     """
-
-    # The serial signals. This signal is emitted when an error occurred
-    error_signal = QtCore.pyqtSignal()
 
     def __init__(self, mode):
         super(SerialInterface, self).__init__()
@@ -66,7 +62,7 @@ class SerialInterface(QtCore.QObject):
 
         except serial.SerialException:
             self._comm = None
-            self.emit_error_signal()
+            # self.emit_error_signal()
             return False
 
         return True
@@ -94,7 +90,7 @@ class SerialInterface(QtCore.QObject):
 
         except serial.SerialException:
             self._comm = None
-            self.emit_error_signal()
+            # self.emit_error_signal()
             return False
 
         return True
@@ -134,7 +130,7 @@ class SerialInterface(QtCore.QObject):
 
         except serial.SerialException:
             self._comm = None
-            self.emit_error_signal()
+            # self.emit_error_signal()
             return False
 
         return True
@@ -151,7 +147,7 @@ class SerialInterface(QtCore.QObject):
                 self._comm.close()
             except serial.SerialException:
                 self._comm = None
-                self.emit_error_signal()
+                # self.emit_error_signal()
                 return False
 
         return True
@@ -209,6 +205,7 @@ class SerialInterface(QtCore.QObject):
             read_string = self._comm.readline().decode('ascii').rstrip("\r\n")
         except serial.SerialException:
             self._comm = None
+            self.emit_error_signal()
             return ''
         except UnicodeDecodeError:
             logger.error("Can't decode text")
@@ -233,7 +230,7 @@ class SerialInterface(QtCore.QObject):
         return False
 
     def emit_error_signal(self):
-        self.error_signal.emit()
+        pass
 
 
 def list_available_ports():
