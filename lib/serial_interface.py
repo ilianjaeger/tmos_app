@@ -1,5 +1,6 @@
 import sys
 import glob
+import time
 import serial
 import logging
 import datetime
@@ -127,6 +128,8 @@ class SerialInterface(QtCore.QObject):
                 return False
 
             logger.debug("Initialization complete!")
+
+            time.sleep(1)
 
         except serial.SerialException:
             self._comm = None

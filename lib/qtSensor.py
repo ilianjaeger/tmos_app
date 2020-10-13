@@ -1,6 +1,7 @@
 import logging
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import pyqtSlot
 
 from lib import serial_interface
 from lib import QtSerialThread
@@ -77,36 +78,48 @@ class QtSensor(QtWidgets.QWidget):
 
         ###################################################################
         ''' BIND SIGNALS '''
-        self.serial_thread = QtSerialThread.QtSerialThread(title)
-        self.serial_thread.serial_response.connect(self.serial_response_received)
+        # Worker
+        self.serial_worker = QtSerialThread.QtSerialWorker(title)
+
+        # Thread
+        self.serial_thread = QtSerialThread.QtSerialThread(title, self.serial_worker) # QtCore.QThread(self, objectName='workerThread')
+        self.serial_worker.moveToThread(self.serial_thread)
+
+        self.serial_worker.serial_response.connect(self.serial_response_received)
 
         self.serial_thread.start()
 
+    @pyqtSlot(int)
     def port_selection_change(self, i):
         if self.comm.is_connected():
             self.logger.warning(
                 "Changed to port " + str(self.com_port_list.currentText()) + ". Disconnect and connect to apply changes")
 
+    @pyqtSlot()
     def connect_button_clicked(self):
         '''if self.com_port_list.currentText() == "":
             self.logger.warning("No available COM port found!")
             return'''
 
         self.logger.info('Connecting...')
-        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['connect'], self.com_port_list.currentText())
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['connect'], self.com_port_list.currentText())
 
+    @pyqtSlot()
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting...')
-        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['disconnect'], '')
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['disconnect'], '')
 
+    @pyqtSlot()
     def start_button_clicked(self):
         self.logger.info('Starting...')
-        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['start'], '')
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['start'], '')
 
+    @pyqtSlot()
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
-        self.serial_thread.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
 
+    @pyqtSlot(int, bool)
     def serial_response_received(self, resp, success):
         if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
             self.serial_connected(success)

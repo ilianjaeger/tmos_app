@@ -15,9 +15,9 @@ class MainWindow(QtWidgets.QWidget):
 
         # Sensors
         sensor_box_1 = QtSensor.QtSensor("Sensor 1", self)
-        sensor_box_2 = QtSensor.QtSensor("Sensor 2", self)
-        sensor_box_3 = QtSensor.QtSensor("Sensor 3", self)
-        sensor_box_4 = QtSensor.QtSensor("Sensor 4", self)
+        #sensor_box_2 = QtSensor.QtSensor("Sensor 2", self)
+        #sensor_box_3 = QtSensor.QtSensor("Sensor 3", self)
+        #sensor_box_4 = QtSensor.QtSensor("Sensor 4", self)
 
         # Log Box
         log_text_box = QtLogger.QLoggerBox(self)
@@ -25,9 +25,9 @@ class MainWindow(QtWidgets.QWidget):
         # Sensor horizontal layout
         sensor_layout = QtWidgets.QHBoxLayout()
         sensor_layout.addWidget(sensor_box_1)
-        sensor_layout.addWidget(sensor_box_2)
-        sensor_layout.addWidget(sensor_box_3)
-        sensor_layout.addWidget(sensor_box_4)
+        #sensor_layout.addWidget(sensor_box_2)
+        #sensor_layout.addWidget(sensor_box_3)
+        #sensor_layout.addWidget(sensor_box_4)
 
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
@@ -40,6 +40,7 @@ class MainWindow(QtWidgets.QWidget):
 if __name__ == '__main__':
     # Main application
     app = QtWidgets.QApplication(sys.argv)
+    QtCore.QThread.currentThread().setObjectName('main')
 
     # Main window
     main_window = MainWindow()
