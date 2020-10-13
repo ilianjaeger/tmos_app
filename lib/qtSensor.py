@@ -76,14 +76,14 @@ class QtSensor(QtWidgets.QWidget):
         self.vbox.addLayout(self.hbox_connect_disconnect_buttons)
         self.vbox.addLayout(self.hbox_start_stop_buttons)
 
-        ###################################################################
         ''' BIND SIGNALS '''
         # Worker
         self.serial_worker = QtSerialThread.QtSerialWorker(title)
 
         # Thread
-        self.serial_thread = QtSerialThread.QtSerialThread(title, self.serial_worker) # QtCore.QThread(self, objectName='workerThread')
+        self.serial_thread = QtCore.QThread(self, objectName=title.replace(" ", "_").upper())
         self.serial_worker.moveToThread(self.serial_thread)
+        # self.serial_worker.read_timer.moveToThread(self.serial_thread)
 
         self.serial_worker.serial_response.connect(self.serial_response_received)
 
@@ -121,6 +121,8 @@ class QtSensor(QtWidgets.QWidget):
 
     @pyqtSlot(int, bool)
     def serial_response_received(self, resp, success):
+        print("[%s] Received response" % QtCore.QThread.currentThread().objectName())
+
         if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
             self.serial_connected(success)
         elif resp == QtSerialThread.SERIAL_RESPONSE['disconnected']:

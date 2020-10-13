@@ -162,12 +162,14 @@ class SerialInterface(QtCore.QObject):
                 Returns true data was successfully processed
         """
 
+        return "My serial stuff"
+
         if not self.is_connected():
             return ''
 
         try:
             recv = self.read_text()
-            if recv is '':
+            if recv == '':
                 return ''
 
             list_data = recv.split('\t')  # Data separated by tabs

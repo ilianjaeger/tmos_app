@@ -47,12 +47,17 @@ class QtSerialWorker(QtCore.QObject):
         self.data_logger.addHandler(self.fh)  # Print content to file
         self.data_logger.propagate = False  # Very ugly solution, but it works...
 
+        # Serial read timer (we HAVE to set the parent, otherwise we need to explixitly move the timer to the thread)
+        self.read_timer = QtCore.QTimer(self)
+        self.read_timer.setInterval(200)
+
         # Signals
-        self.serial_command.connect(self.received_command)
+        self.serial_command.connect(self.received_command) # Serial commands
+        self.read_timer.timeout.connect(self.read_data) # Read timer
 
     @pyqtSlot(int, str)
     def received_command(self, command, arg):
-        print("[%s] Processing" % QtCore.QThread.currentThread().objectName())
+        print("[%s] Received command" % QtCore.QThread.currentThread().objectName())
 
         if command == SERIAL_COMMAND['connect']:
             self.connect(arg)
@@ -63,6 +68,16 @@ class QtSerialWorker(QtCore.QObject):
         elif command == SERIAL_COMMAND['stop']:
             self.stop_read()
 
+    @pyqtSlot()
+    def read_data(self):
+        print("[%s] Timeout reached" % QtCore.QThread.currentThread().objectName())
+
+        data = self.serial.process_data()
+        
+        if data != '':
+            self.data_logger.debug(data)
+            print(data)
+
     def connect(self, port):
         if self.serial.open_port(port):
             self.serial_response.emit(SERIAL_RESPONSE['connected'], True)
@@ -70,6 +85,7 @@ class QtSerialWorker(QtCore.QObject):
             self.serial_response.emit(SERIAL_RESPONSE['connected'], False)
 
         self.running_read = False
+        self.read_timer.stop()
 
     def disconnect(self):
         if self.serial.close_port():
@@ -78,6 +94,7 @@ class QtSerialWorker(QtCore.QObject):
             self.serial_response.emit(SERIAL_RESPONSE['disconnected'], False)
 
         self.running_read = False
+        self.read_timer.stop()
 
     def start_read(self):
         if self.serial.connect_device():
@@ -86,6 +103,7 @@ class QtSerialWorker(QtCore.QObject):
             self.serial_response.emit(SERIAL_RESPONSE['started'], False)
 
         self.running_read = True
+        self.read_timer.start()
 
     def stop_read(self):
         if self.serial.stop_device():
@@ -94,36 +112,8 @@ class QtSerialWorker(QtCore.QObject):
             self.serial_response.emit(SERIAL_RESPONSE['stopped'], False)
 
         self.running_read = False
+        self.read_timer.stop()
 
     def emit_error_signal(self):
         self.serial_response.emit(SERIAL_RESPONSE['error'], False)
         self.running_read = False
-
-
-class QtSerialThread(QtCore.QThread):
-    """ Main serial thread object
-    """
-
-    def __init__(self, title, worker):
-        QtCore.QThread.__init__(self)
-
-        # Set thread name
-        self.title = title.replace(" ", "_").upper()
-        self.setObjectName(self.title)
-
-        self.worker = worker
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        while True:
-            print("running " + self.title)
-
-            '''if self.worker.running_read:
-                self.worker.received_command(SERIAL_COMMAND['start'], '')
-                # data = self.process_data()
-                # if data != '':
-                #    self.data_logger.debug(data)'''
-            self.sleep(2)
-            self.
