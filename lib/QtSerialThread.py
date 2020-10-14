@@ -40,24 +40,24 @@ class QtSerialWorker(QtCore.QObject):
         self.serial = SerialInterface(0)
 
         # Data logger
-        self.data_logger = logging.getLogger(self.title)
+        self.data_logger = logging.getLogger('DATA.' + self.title)
         self.data_logger.setLevel(logging.DEBUG)
         self.fh = logging.FileHandler(title.replace(" ", "_").upper() + ".log")
         self.fh.setLevel(logging.DEBUG)
         self.data_logger.addHandler(self.fh)  # Print content to file
         self.data_logger.propagate = False  # Very ugly solution, but it works...
 
-        # Serial read timer (we HAVE to set the parent, otherwise we need to explixitly move the timer to the thread)
+        # Serial read timer (we HAVE to set the parent, otherwise we need to explicitly move the timer to the thread)
         self.read_timer = QtCore.QTimer(self)
-        self.read_timer.setInterval(200)
+        self.read_timer.setInterval(10)
 
         # Signals
-        self.serial_command.connect(self.received_command) # Serial commands
-        self.read_timer.timeout.connect(self.read_data) # Read timer
+        self.serial_command.connect(self.received_command)  # Serial commands
+        self.read_timer.timeout.connect(self.read_data)  # Read timer
 
     @pyqtSlot(int, str)
     def received_command(self, command, arg):
-        print("[%s] Received command" % QtCore.QThread.currentThread().objectName())
+        # print("[%s] Received command" % QtCore.QThread.currentThread().objectName())
 
         if command == SERIAL_COMMAND['connect']:
             self.connect(arg)
@@ -70,13 +70,13 @@ class QtSerialWorker(QtCore.QObject):
 
     @pyqtSlot()
     def read_data(self):
-        print("[%s] Timeout reached" % QtCore.QThread.currentThread().objectName())
+        # print("[%s] Timeout reached" % QtCore.QThread.currentThread().objectName())
 
         data = self.serial.process_data()
         
         if data != '':
             self.data_logger.debug(data)
-            print(data)
+            logging.debug(data)  # print(data)
 
     def connect(self, port):
         if self.serial.open_port(port):

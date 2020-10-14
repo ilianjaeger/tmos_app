@@ -32,7 +32,7 @@ class MainWindow(QtWidgets.QWidget):
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
         root_layout.addLayout(sensor_layout)
-        root_layout.addWidget(log_text_box.widget)
+        root_layout.addWidget(log_text_box)
 
         self.setLayout(root_layout)
 

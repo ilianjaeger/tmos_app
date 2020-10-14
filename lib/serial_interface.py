@@ -162,8 +162,6 @@ class SerialInterface(QtCore.QObject):
                 Returns true data was successfully processed
         """
 
-        return "My serial stuff"
-
         if not self.is_connected():
             return ''
 

@@ -76,17 +76,19 @@ class QtSensor(QtWidgets.QWidget):
         self.vbox.addLayout(self.hbox_connect_disconnect_buttons)
         self.vbox.addLayout(self.hbox_start_stop_buttons)
 
-        ''' BIND SIGNALS '''
+        ''' SERIAL WORKER (THREAD) '''
         # Worker
         self.serial_worker = QtSerialThread.QtSerialWorker(title)
 
         # Thread
-        self.serial_thread = QtCore.QThread(self, objectName=title.replace(" ", "_").upper())
+        self.serial_thread = QtCore.QThread(self)
+        self.serial_thread.setObjectName(title.replace(" ", "_").upper())
         self.serial_worker.moveToThread(self.serial_thread)
-        # self.serial_worker.read_timer.moveToThread(self.serial_thread)
 
+        # Signals
         self.serial_worker.serial_response.connect(self.serial_response_received)
 
+        # Start serial thread
         self.serial_thread.start()
 
     @pyqtSlot(int)
@@ -97,9 +99,9 @@ class QtSensor(QtWidgets.QWidget):
 
     @pyqtSlot()
     def connect_button_clicked(self):
-        '''if self.com_port_list.currentText() == "":
+        if self.com_port_list.currentText() == "":
             self.logger.warning("No available COM port found!")
-            return'''
+            return
 
         self.logger.info('Connecting...')
         self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['connect'], self.com_port_list.currentText())
@@ -121,7 +123,7 @@ class QtSensor(QtWidgets.QWidget):
 
     @pyqtSlot(int, bool)
     def serial_response_received(self, resp, success):
-        print("[%s] Received response" % QtCore.QThread.currentThread().objectName())
+        # print("[%s] Received response" % QtCore.QThread.currentThread().objectName())
 
         if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
             self.serial_connected(success)
@@ -142,6 +144,7 @@ class QtSensor(QtWidgets.QWidget):
             self.disconnect_button.setEnabled(True)
             self.start_button.setEnabled(True)
             self.stop_button.setEnabled(False)
+            self.com_port_list.setEnabled(False)
         else:
             self.logger.error("Could not connect!")
 
@@ -160,6 +163,7 @@ class QtSensor(QtWidgets.QWidget):
         self.disconnect_button.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
+        self.com_port_list.setEnabled(True)
 
     def serial_started(self, success):
         if success:
@@ -189,3 +193,4 @@ class QtSensor(QtWidgets.QWidget):
         self.disconnect_button.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
+        self.com_port_list.setEnabled(True)
