@@ -37,7 +37,7 @@ class QtSerialWorker(QtCore.QObject):
         self.running_read = False
 
         # Serial interface
-        self.serial = SerialInterface(0)
+        self.serial = SerialInterface()
 
         # Data logger
         self.data_logger = logging.getLogger('DATA.' + self.title)

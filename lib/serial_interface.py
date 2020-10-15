@@ -7,17 +7,9 @@ import datetime
 
 from PyQt5 import QtCore
 
-# Start serial logger
+# Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
 logger.setLevel(logging.INFO)
-
-# Start data logger -> File
-data_logger = logging.getLogger('PC.DATA')
-data_logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler("spam.log")
-fh.setLevel(logging.DEBUG)
-data_logger.addHandler(fh)  # Print content to file
-data_logger.propagate = False  # Very ugly solution, but it works...
 
 ################################################
 # SERIAL COMMUNICATION                         #
@@ -31,7 +23,7 @@ class SerialInterface(QtCore.QObject):
     """ Main serial interface
     """
 
-    def __init__(self, mode):
+    def __init__(self):
         super(SerialInterface, self).__init__()
 
         self._comm = None
@@ -40,7 +32,7 @@ class SerialInterface(QtCore.QObject):
         self._baudraute = 115200
         self._parity = 'N'
         self._stop_bits = 1
-        self._mode = int(mode)
+        self._mode = 0  # Start with 8Hz
 
     def open_port(self, port):
         """ Opens a port
@@ -184,7 +176,6 @@ class SerialInterface(QtCore.QObject):
             for i in list_data:
                 log_text = log_text + "[" + str(i) + "],"
 
-            data_logger.debug(log_text)
             logger.debug(log_text)
 
         except serial.SerialException:

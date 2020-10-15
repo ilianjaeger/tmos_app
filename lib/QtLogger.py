@@ -24,8 +24,8 @@ class QLoggingHandler(logging.Handler):
         self.log_queue.put(record)
 
 
-class QLoggerBox(QtWidgets.QPlainTextEdit):
-    def __init__(self, parent):
+class QLoggerBox(QtWidgets.QGroupBox):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         # Set the logger
@@ -38,15 +38,23 @@ class QLoggerBox(QtWidgets.QPlainTextEdit):
         self.logger.addHandler(self.log_handler)
         # logging.getLogger().addHandler(self) # Bind root logger
 
-        # Set the widget
-        # self.widget = QtWidgets.QPlainTextEdit(parent)
-        self.setReadOnly(True)
-
         # Polling timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(5)
         self.timer.timeout.connect(self.add_record)
         self.timer.start()
+
+        # Set the widgets
+        self.setTitle("Log output")
+        self.setCheckable(False)
+
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.setLayout(self.vbox)
+
+        self.log_widget = QtWidgets.QPlainTextEdit()
+        self.log_widget.setReadOnly(True)
+
+        self.vbox.addWidget(self.log_widget)
 
     @pyqtSlot()
     def add_record(self):
@@ -56,4 +64,4 @@ class QLoggerBox(QtWidgets.QPlainTextEdit):
             pass
         else:
             msg = self.log_handler.format(record)
-            self.appendHtml("<font color=" + COLORS[record.levelname] + ">" + msg + "</font>")
+            self.log_widget.appendHtml("<font color=" + COLORS[record.levelname] + ">" + msg + "</font>")
