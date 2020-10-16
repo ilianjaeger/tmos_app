@@ -147,6 +147,21 @@ class SerialInterface(QtCore.QObject):
 
         return True
 
+    def set_mode(self, mode):
+        """ Set operating mode (fast, slow)
+
+            :returns:
+                Returns true if mode was successfully set
+                False means wrong mode type
+        """
+
+        if mode != 0 and mode != 1:
+            return False
+
+        self._mode = mode
+        logger.debug("mode set to {}".format(mode))
+        return True
+
     def process_data(self):
         """ Process the data received from the MCU
 

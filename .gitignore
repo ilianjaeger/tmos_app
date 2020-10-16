@@ -1,4 +1,5 @@
 *.log
 *.pyc
+output
 .idea
 __pycache__

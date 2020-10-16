@@ -8,7 +8,7 @@ from lib import QtSerialThread
 
 
 class QtSensor(QtWidgets.QWidget):
-    def __init__(self, title, parent=None):
+    def __init__(self, title, exp_name, parent=None):
         super(QtSensor, self).__init__(parent)
 
         # Start own module logger
@@ -78,7 +78,7 @@ class QtSensor(QtWidgets.QWidget):
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
-        self.serial_worker = QtSerialThread.QtSerialWorker(title)
+        self.serial_worker = QtSerialThread.QtSerialWorker(title, exp_name)
 
         # Thread
         self.serial_thread = QtCore.QThread(self)
@@ -121,8 +121,8 @@ class QtSensor(QtWidgets.QWidget):
         self.logger.info('Stopping...')
         self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
 
-    @pyqtSlot(int, bool)
-    def serial_response_received(self, resp, success):
+    @pyqtSlot(int, bool, str)
+    def serial_response_received(self, resp, success, extra):
         # print("[%s] Received response" % QtCore.QThread.currentThread().objectName())
 
         if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
@@ -133,6 +133,10 @@ class QtSensor(QtWidgets.QWidget):
             self.serial_started(success)
         elif resp == QtSerialThread.SERIAL_RESPONSE['stopped']:
             self.serial_stopped(success)
+        elif resp == QtSerialThread.SERIAL_RESPONSE['mode_changed']:
+            self.mode_changed(success, extra)
+        elif resp == QtSerialThread.SERIAL_RESPONSE['handler_changed']:
+            self.handler_changed(success, extra)
         else:
             self.serial_error_signal()
 
@@ -185,6 +189,24 @@ class QtSensor(QtWidgets.QWidget):
 
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
+
+    def mode_changed(self, success, extra):
+        if success:
+            self.logger.debug("Operation mode successfully updated! Mode set to " + extra)
+        else:
+            self.logger.error("Invalid mode selected! Invalid mode " + extra)
+
+    def handler_changed(self, success, extra):
+        if success:
+            self.logger.debug("Successfully changed log file! New file " + extra)
+        else:
+            self.logger.debug("Log file not updated! " + extra)
+
+    def is_connected(self):
+        return self.disconnect_button.isEnabled()
+
+    def is_started(self):
+        return self.stop_button.isEnabled()
 
     def serial_error_signal(self):
         self.logger.error("Serial error! Resetting...")
