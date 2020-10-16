@@ -27,9 +27,9 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install depende
 
 ### Vicon installation
 
-This application uses the [Vicon SDK](https://www.vicon.com/software/datastream-sdk/?section=downloads). Download the newest version (> 11.1.0) for Python support. The current version only works on Windows machines.
+This application uses the [Vicon SDK](https://www.vicon.com/software/datastream-sdk/?section=downloads). Download the newest version (> 1.11.0) for Python support. The current version only works on Windows machines.
 
-Install the python data stream library <em>vicon_dssdk</em> by running the configuration file (in the installation folder)
+Install the python data stream library <em>vicon_dssdk</em> by running the configuration file (in the installation folder).
 Make sure the desired environment is activated (`conda activate [env_name]`)
 
 ```
@@ -47,7 +47,7 @@ print('Version', client.GetVersion()) # Print SDK version
 
 ### Required folders
 
-The output logs will be save in the `output/` folder. Create one if it does not already exist. Not creating one will crash the program.
+The output logs will be saved in the `output/` folder. Create one if it does not already exist. Not creating one will crash the program.
 
 ## Usage
 
