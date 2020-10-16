@@ -9,7 +9,9 @@ SERIAL_COMMAND = {
     'connect': 1,
     'disconnect': 2,
     'start': 3,
-    'stop': 4
+    'stop': 4,
+    'mode': 5,
+    'handler': 6
 }
 
 # The serial responses sent to the GUI thread
@@ -82,6 +84,10 @@ class QtSerialWorker(QtCore.QObject):
             self.start_read()
         elif command == SERIAL_COMMAND['stop']:
             self.stop_read()
+        elif command == SERIAL_COMMAND['mode']:
+            self.change_mode(arg)
+        elif command == SERIAL_COMMAND['handler']:
+            self.change_log_handler(arg)
 
     @pyqtSlot()
     def read_data(self):
@@ -134,7 +140,7 @@ class QtSerialWorker(QtCore.QObject):
         self.running_read = False
 
     def change_mode(self, mode):
-        self.serial_response.emit(SERIAL_RESPONSE['mode_changed'], self.serial.set_mode(mode), "[{}]".format(mode))
+        self.serial_response.emit(SERIAL_RESPONSE['mode_changed'], self.serial.set_mode(int(mode)), "[{}]".format(mode))
 
     def change_log_handler(self, exp_name):
         if exp_name == self.exp_name:

@@ -121,6 +121,12 @@ class QtSensor(QtWidgets.QWidget):
         self.logger.info('Stopping...')
         self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
 
+    def change_mode(self, mode):
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['mode'], str(mode))
+
+    def change_file_handler(self, name):
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['handler'], str(name))
+
     @pyqtSlot(int, bool, str)
     def serial_response_received(self, resp, success, extra):
         # print("[%s] Received response" % QtCore.QThread.currentThread().objectName())

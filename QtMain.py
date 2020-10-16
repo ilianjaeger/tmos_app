@@ -6,7 +6,7 @@ from lib import QtLogger
 from lib import QtSensor
 
 # Initialize logger
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -140,22 +140,25 @@ class MainWindow(QtWidgets.QWidget):
 
         decision = msg.exec_()
         if decision == QtWidgets.QMessageBox.Cancel:
-            logging.info("Not saving configuration!")
+            logging.warning("Not saving configuration!")
         else:
+            # Stop all device before making any changes
+            self.stop_all_button_clicked()
+
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
             self.set_title()
-            self.sensor_box_1.serial_worker.change_log_handler(self.experiment_name)
-            self.sensor_box_2.serial_worker.change_log_handler(self.experiment_name)
-            self.sensor_box_3.serial_worker.change_log_handler(self.experiment_name)
-            self.sensor_box_4.serial_worker.change_log_handler(self.experiment_name)
+            self.sensor_box_1.change_file_handler(self.experiment_name)
+            self.sensor_box_2.change_file_handler(self.experiment_name)
+            self.sensor_box_3.change_file_handler(self.experiment_name)
+            self.sensor_box_4.change_file_handler(self.experiment_name)
 
             # Change operation mode
             op_mode = int(self.mode_select_32.isChecked())
-            self.sensor_box_1.serial_worker.change_mode(op_mode)
-            self.sensor_box_2.serial_worker.change_mode(op_mode)
-            self.sensor_box_3.serial_worker.change_mode(op_mode)
-            self.sensor_box_4.serial_worker.change_mode(op_mode)
+            self.sensor_box_1.change_mode(op_mode)
+            self.sensor_box_2.change_mode(op_mode)
+            self.sensor_box_3.change_mode(op_mode)
+            self.sensor_box_4.change_mode(op_mode)
 
             logging.info("Configuration successfully saved!")
 
