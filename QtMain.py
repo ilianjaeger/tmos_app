@@ -29,7 +29,14 @@ class MainWindow(QtWidgets.QWidget):
         self.experiment_name_line = QtWidgets.QLineEdit(self)
         self.experiment_name_line.setText(self.experiment_name)
         self.experiment_name_label = QtWidgets.QLabel(self.config_box)
-        self.experiment_name_label.setText("Log name")
+        self.experiment_name_label.setText("Experiment name")
+
+        # Default output folder
+        self.default_output_folder = QtWidgets.QLabel()
+        self.default_output_folder.setText("output/")
+        font = self.default_output_folder.font()
+        font.setBold(True)
+        self.default_output_folder.setFont(font)
 
         # Mode (8Hz or 32Hz)
         self.mode_select_8 = QtWidgets.QRadioButton("8 Hz")
@@ -49,6 +56,7 @@ class MainWindow(QtWidgets.QWidget):
         self.config_root_layout.addWidget(self.save_button)
 
         self.config_layout.addWidget(self.experiment_name_label)
+        self.config_layout.addWidget(self.default_output_folder)
         self.config_layout.addWidget(self.experiment_name_line)
         self.config_layout.addWidget(self.mode_select_label)
         self.config_layout.addWidget(self.mode_select_8)
@@ -131,7 +139,7 @@ class MainWindow(QtWidgets.QWidget):
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Warning)
 
-        msg.setText("In order to make these configurations take effect all devices have to be disconnected. Continue?")
+        msg.setText("In order to make these configurations take effect all devices have to be stopped. Continue?")
         # msg.setInformativeText("This is additional information")
         msg.setWindowTitle("Save configuration")
         # msg.setDetailedText("The details are as follows:")
