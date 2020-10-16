@@ -241,6 +241,9 @@ class SerialInterface(QtCore.QObject):
     def emit_error_signal(self):
         pass
 
+    def get_port(self):
+        return self._port
+
 
 def list_available_ports():
     """ Lists serial port names

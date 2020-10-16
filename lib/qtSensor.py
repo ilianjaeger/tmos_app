@@ -71,10 +71,17 @@ class QtSensor(QtWidgets.QWidget):
         self.hbox_start_stop_buttons.addWidget(self.start_button)
         self.hbox_start_stop_buttons.addWidget(self.stop_button)
 
+        ''' LOG OUTPUT TO CONSOLE '''
+        self.console_log_check = QtWidgets.QCheckBox()
+        self.console_log_check.setText("Log output to console")
+        self.console_log_check.setChecked(False)
+        self.console_log_check.stateChanged.connect(self.console_log_changed)
+
         ''' ADD LAYOUTS/WIDGETS '''
         self.vbox.addWidget(self.com_port_list)
         self.vbox.addLayout(self.hbox_connect_disconnect_buttons)
         self.vbox.addLayout(self.hbox_start_stop_buttons)
+        self.vbox.addWidget(self.console_log_check)
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
@@ -92,10 +99,14 @@ class QtSensor(QtWidgets.QWidget):
         self.serial_thread.start()
 
     @pyqtSlot(int)
+    def console_log_changed(self, checked):
+        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['console'], str(self.console_log_check.isChecked()))
+
+    @pyqtSlot(int)
     def port_selection_change(self, i):
-        if self.comm.is_connected():
-            self.logger.warning(
-                "Changed to port " + str(self.com_port_list.currentText()) + ". Disconnect and connect to apply changes")
+        pass
+        '''if self.comm.is_connected(): self.logger.warning( "Changed to port " + str(self.com_port_list.currentText(
+        )) + ". Disconnect and connect to apply changes") '''
 
     @pyqtSlot()
     def connect_button_clicked(self):

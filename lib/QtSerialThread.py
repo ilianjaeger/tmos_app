@@ -11,7 +11,8 @@ SERIAL_COMMAND = {
     'start': 3,
     'stop': 4,
     'mode': 5,
-    'handler': 6
+    'handler': 6,
+    'console': 7
 }
 
 # The serial responses sent to the GUI thread
@@ -52,6 +53,9 @@ class QtSerialWorker(QtCore.QObject):
         self.exp_name = exp_name
         self.running_read = False
 
+        # Log sensor data to console
+        self.log_to_console = False
+
         # Serial interface
         self.serial = SerialInterface()
 
@@ -88,6 +92,8 @@ class QtSerialWorker(QtCore.QObject):
             self.change_mode(arg)
         elif command == SERIAL_COMMAND['handler']:
             self.change_log_handler(arg)
+        elif command == SERIAL_COMMAND['console']:
+            self.change_log_to_console(arg)
 
     @pyqtSlot()
     def read_data(self):
@@ -97,7 +103,9 @@ class QtSerialWorker(QtCore.QObject):
 
         if data != '':
             self.data_logger.debug(data)
-            logging.debug(data)  # print(data)
+
+            if self.log_to_console:
+                logging.debug(str(self.serial.get_port()) + data)  # print(data)
 
     def connect(self, port):
         if self.serial.open_port(port):
@@ -156,3 +164,6 @@ class QtSerialWorker(QtCore.QObject):
 
         self.serial_response.emit(SERIAL_RESPONSE['handler_changed'], True,
                                   "[{}]".format(get_log_filename(self.exp_name, self.title)))
+
+    def change_log_to_console(self, activate):
+        self.log_to_console = activate == 'True'
