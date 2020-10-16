@@ -4,6 +4,7 @@ import logging
 
 from lib import QtLogger
 from lib import QtSensor
+from lib import QVicon
 
 # Initialize logger
 logging.getLogger().setLevel(logging.INFO)
@@ -62,6 +63,10 @@ class MainWindow(QtWidgets.QWidget):
         self.config_layout.addWidget(self.mode_select_8)
         self.config_layout.addWidget(self.mode_select_32)
 
+        ''' VICON '''
+        # Vicon instance
+        self.vicon_box = QVicon.QVicon()
+
         ''' SENSORS '''
         # Sensors
         self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, self)
@@ -101,6 +106,7 @@ class MainWindow(QtWidgets.QWidget):
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
         root_layout.addWidget(self.config_box)
+        root_layout.addWidget(self.vicon_box)
         root_layout.addLayout(self.sensor_layout)
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(log_text_box)
