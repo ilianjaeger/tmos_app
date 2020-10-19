@@ -5,11 +5,12 @@ import serial
 import logging
 import datetime
 
-from PyQt5 import QtCore
+from lib import GlobalInterface
 
 # Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
 logger.setLevel(logging.INFO)
+
 
 ################################################
 # SERIAL COMMUNICATION                         #
@@ -19,20 +20,16 @@ logger.setLevel(logging.INFO)
 ################################################
 
 
-class SerialInterface(QtCore.QObject):
+class SerialInterface(GlobalInterface.GlobalInterface):
     """ Main serial interface
     """
 
     def __init__(self):
         super(SerialInterface, self).__init__()
 
-        self._comm = None
-        self._port = None
-        self._timeout = 0.5
         self._baudraute = 115200
         self._parity = 'N'
         self._stop_bits = 1
-        self._mode = 0  # Start with 8Hz
 
     def open_port(self, port):
         """ Opens a port
@@ -88,7 +85,7 @@ class SerialInterface(QtCore.QObject):
 
         return True
 
-    def connect_device(self):
+    def start_device(self):
         """ Connect and start device
 
             :returns:
@@ -145,21 +142,6 @@ class SerialInterface(QtCore.QObject):
                 # self.emit_error_signal()
                 return False
 
-        return True
-
-    def set_mode(self, mode):
-        """ Set operating mode (fast, slow)
-
-            :returns:
-                Returns true if mode was successfully set
-                False means wrong mode type
-        """
-
-        if mode != 0 and mode != 1:
-            return False
-
-        self._mode = mode
-        logger.debug("mode set to {}".format(mode))
         return True
 
     def process_data(self):
@@ -237,12 +219,6 @@ class SerialInterface(QtCore.QObject):
                 return True
 
         return False
-
-    def emit_error_signal(self):
-        pass
-
-    def get_port(self):
-        return self._port
 
 
 def list_available_ports():

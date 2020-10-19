@@ -4,7 +4,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
 
 from lib import serial_interface
-from lib import QtSerialThread
+from lib.QtSerialThread import QtSerialWorker
+from lib.GlobalThread import QtGlobalWorker
 
 
 class QtSensor(QtWidgets.QWidget):
@@ -85,7 +86,7 @@ class QtSensor(QtWidgets.QWidget):
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
-        self.serial_worker = QtSerialThread.QtSerialWorker(title, exp_name)
+        self.serial_worker = QtSerialWorker(title, exp_name, 10)
 
         # Thread
         self.serial_thread = QtCore.QThread(self)
@@ -93,14 +94,14 @@ class QtSensor(QtWidgets.QWidget):
         self.serial_worker.moveToThread(self.serial_thread)
 
         # Signals
-        self.serial_worker.serial_response.connect(self.serial_response_received)
+        self.serial_worker.get_worker_response_signal().connect(self.serial_response_received)
 
         # Start serial thread
         self.serial_thread.start()
 
     @pyqtSlot(int)
     def console_log_changed(self, checked):
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['console'], str(self.console_log_check.isChecked()))
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['console'], str(self.console_log_check.isChecked()))
 
     @pyqtSlot(int)
     def port_selection_change(self, i):
@@ -115,45 +116,47 @@ class QtSensor(QtWidgets.QWidget):
             return
 
         self.logger.info('Connecting...')
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['connect'], self.com_port_list.currentText())
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['connect'], self.com_port_list.currentText())
 
     @pyqtSlot()
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting...')
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['disconnect'], '')
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['disconnect'], '')
 
     @pyqtSlot()
     def start_button_clicked(self):
         self.logger.info('Starting...')
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['start'], '')
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['start'], '')
 
     @pyqtSlot()
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['stop'], '')
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['stop'], '')
 
     def change_mode(self, mode):
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['mode'], str(mode))
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['mode'], str(mode))
 
     def change_file_handler(self, name):
-        self.serial_worker.serial_command.emit(QtSerialThread.SERIAL_COMMAND['handler'], str(name))
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
 
     @pyqtSlot(int, bool, str)
     def serial_response_received(self, resp, success, extra):
         # print("[%s] Received response" % QtCore.QThread.currentThread().objectName())
 
-        if resp == QtSerialThread.SERIAL_RESPONSE['connected']:
+        if resp == QtGlobalWorker.WORKER_RESPONSE['connected']:
             self.serial_connected(success)
-        elif resp == QtSerialThread.SERIAL_RESPONSE['disconnected']:
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['disconnected']:
             self.serial_disconnected(success)
-        elif resp == QtSerialThread.SERIAL_RESPONSE['started']:
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['started']:
             self.serial_started(success)
-        elif resp == QtSerialThread.SERIAL_RESPONSE['stopped']:
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['stopped']:
             self.serial_stopped(success)
-        elif resp == QtSerialThread.SERIAL_RESPONSE['mode_changed']:
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['mode_changed']:
             self.mode_changed(success, extra)
-        elif resp == QtSerialThread.SERIAL_RESPONSE['handler_changed']:
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['handler_changed']:
             self.handler_changed(success, extra)
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['log_data']:
+            self.log_data(extra)
         else:
             self.serial_error_signal()
 
@@ -218,6 +221,9 @@ class QtSensor(QtWidgets.QWidget):
             self.logger.debug("Successfully changed log file! New file " + extra)
         else:
             self.logger.debug("Log file not updated! " + extra)
+
+    def log_data(self, data):
+        self.logger.info(data)
 
     def is_connected(self):
         return self.disconnect_button.isEnabled()

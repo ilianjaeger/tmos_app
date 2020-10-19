@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QWidget):
 
         ''' VICON '''
         # Vicon instance
-        self.vicon_box = QVicon.QVicon()
+        self.vicon_box = QVicon.QVicon("Vicon", self.experiment_name)
 
         ''' SENSORS '''
         # Sensors
