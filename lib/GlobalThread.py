@@ -3,6 +3,15 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 
 
+################################################
+# BASE THREAD WORKER FOR SENSORS               #
+#                                              #
+# - Handles all the work with respect to a     #
+#   sensor -> Vicon and TMOS                   #
+#                                              #
+################################################
+
+
 class QtGlobalWorker(QtCore.QObject):
     """ Main global worker
     """
@@ -134,13 +143,13 @@ class QtGlobalWorker(QtCore.QObject):
         self._worker_response.emit(self.WORKER_RESPONSE['mode_changed'], self._interface.set_mode(int(mode)), "[{}]".format(mode))
 
     def change_log_handler(self, exp_name):
-        if exp_name == self.exp_name:
+        if exp_name == self._exp_name:
             self._worker_response.emit(self.WORKER_RESPONSE['handler_changed'], False, "Name unchanged")
             return
 
         self._exp_name = exp_name
 
-        self._data_logger.removeHandler(self.fh)  # Remove current handler
+        self._data_logger.removeHandler(self._fh)  # Remove current handler
         self._fh.close()  # Close file
         self._fh = QtGlobalWorker._create_and_append_new_handler(self._exp_name, self._title)  # Create new handler
         self._data_logger.addHandler(self._fh)  # Attach this new handler

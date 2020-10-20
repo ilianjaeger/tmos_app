@@ -150,6 +150,12 @@ class QVicon(QtWidgets.QGroupBox):
         self.logger.info('Stopping...')
         self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['stop'], '')
 
+    def change_mode(self, mode):
+        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['mode'], str(mode))
+
+    def change_file_handler(self, name):
+        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
+
     @pyqtSlot(int, bool, str)
     def vicon_response_received(self, resp, success, extra):
         if resp == QtGlobalWorker.WORKER_RESPONSE['connected']:

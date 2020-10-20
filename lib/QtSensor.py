@@ -8,7 +8,7 @@ from lib.QtSerialThread import QtSerialWorker
 from lib.GlobalThread import QtGlobalWorker
 
 
-class QtSensor(QtWidgets.QWidget):
+class QtSensor(QtWidgets.QGroupBox):
     def __init__(self, title, exp_name, parent=None):
         super(QtSensor, self).__init__(parent)
 
@@ -20,16 +20,12 @@ class QtSensor(QtWidgets.QWidget):
         self.setWindowTitle("group_box" + title)
 
         # Set a QGrid layout [root layout]
-        self.root_layout = QtWidgets.QGridLayout()
+        self.root_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.root_layout)
 
         # Create the group and add it to the root layout
-        self.groupbox = QtWidgets.QGroupBox(title)
-        self.groupbox.setCheckable(False)
-        self.root_layout.addWidget(self.groupbox)
-
-        self.vbox = QtWidgets.QVBoxLayout()
-        self.groupbox.setLayout(self.vbox)
+        self.setTitle(title)
+        self.setCheckable(False)
 
         # The available serial ports
         self.com_port_list = QtWidgets.QComboBox()
@@ -79,10 +75,10 @@ class QtSensor(QtWidgets.QWidget):
         self.console_log_check.stateChanged.connect(self.console_log_changed)
 
         ''' ADD LAYOUTS/WIDGETS '''
-        self.vbox.addWidget(self.com_port_list)
-        self.vbox.addLayout(self.hbox_connect_disconnect_buttons)
-        self.vbox.addLayout(self.hbox_start_stop_buttons)
-        self.vbox.addWidget(self.console_log_check)
+        self.root_layout.addWidget(self.com_port_list)
+        self.root_layout.addLayout(self.hbox_connect_disconnect_buttons)
+        self.root_layout.addLayout(self.hbox_start_stop_buttons)
+        self.root_layout.addWidget(self.console_log_check)
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker

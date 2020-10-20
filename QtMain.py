@@ -132,6 +132,7 @@ class MainWindow(QtWidgets.QWidget):
         self.sensor_box_2.start_button.click()
         self.sensor_box_3.start_button.click()
         self.sensor_box_4.start_button.click()
+        self.vicon_box.start_button.click()
 
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")
@@ -140,6 +141,7 @@ class MainWindow(QtWidgets.QWidget):
         self.sensor_box_2.stop_button.click()
         self.sensor_box_3.stop_button.click()
         self.sensor_box_4.stop_button.click()
+        self.vicon_box.stop_button.click()
 
     def save_config(self):
         msg = QtWidgets.QMessageBox()
@@ -166,6 +168,7 @@ class MainWindow(QtWidgets.QWidget):
             self.sensor_box_2.change_file_handler(self.experiment_name)
             self.sensor_box_3.change_file_handler(self.experiment_name)
             self.sensor_box_4.change_file_handler(self.experiment_name)
+            self.vicon_box.change_file_handler(self.experiment_name)
 
             # Change operation mode
             op_mode = int(self.mode_select_32.isChecked())
@@ -173,6 +176,7 @@ class MainWindow(QtWidgets.QWidget):
             self.sensor_box_2.change_mode(op_mode)
             self.sensor_box_3.change_mode(op_mode)
             self.sensor_box_4.change_mode(op_mode)
+            self.vicon_box.change_mode(op_mode)
 
             logging.info("Configuration successfully saved!")
 
