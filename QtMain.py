@@ -14,6 +14,9 @@ class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args):
         QtWidgets.QWidget.__init__(self, *args)
 
+        # Frameless
+        # self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
+
         self.experiment_name = "Experiment 0"
         self.set_title()
 
@@ -185,6 +188,15 @@ if __name__ == '__main__':
     # Main application
     app = QtWidgets.QApplication(sys.argv)
     QtCore.QThread.currentThread().setObjectName('main')
+
+    # Add the stylesheet to the application
+    try:
+        sshFile = "style/style.css"
+        fh = open(sshFile, "r")
+        app.setStyleSheet(fh.read())
+    except:
+        print('Could not open file!')
+        pass
 
     # Main window
     main_window = MainWindow()
