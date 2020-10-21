@@ -3,16 +3,6 @@ from PyQt5.QtCore import pyqtSlot
 import logging
 import queue
 
-# Logging colors
-COLORS = {
-    'WARNING': "orange",
-    'INFO': "black",
-    'DEBUG': "blue",
-    'CRITICAL': "orange",
-    'ERROR': "red"
-}
-
-
 class QLoggingHandler(logging.Handler):
     def __init__(self, log_queue):
         super().__init__()
@@ -25,6 +15,15 @@ class QLoggingHandler(logging.Handler):
 
 
 class QLoggerBox(QtWidgets.QGroupBox):
+    # Logging colors
+    COLORS = {
+        'WARNING': "orange",
+        'INFO': "black",
+        'DEBUG': "blue",
+        'CRITICAL': "orange",
+        'ERROR': "red"
+    }
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -64,4 +63,10 @@ class QLoggerBox(QtWidgets.QGroupBox):
             pass
         else:
             msg = self.log_handler.format(record)
-            self.log_widget.appendHtml("<font color=" + COLORS[record.levelname] + ">" + msg + "</font>")
+            self.log_widget.appendHtml("<font color=" + self.COLORS[record.levelname] + ">" + msg + "</font>")
+
+    def adapt_colors_to_mode(self, mode):
+        if mode == "dark":
+            self.COLORS["INFO"] = "white"
+        else:
+            self.COLORS["INFO"] = "black"

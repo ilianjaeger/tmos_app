@@ -35,7 +35,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_title()
 
         self.style_dark = load_style("style/dark.css")
-        self.change_style('dark')
 
         self.style_menu_dark = QtWidgets.QAction("Dark", self)
         self.style_menu_dark.setStatusTip('Set to dark mode')
@@ -135,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         start_stop_layout.addWidget(self.stop_all_button)
 
         # Log Box
-        log_text_box = QtLogger.QLoggerBox()
+        self.log_text_box = QtLogger.QLoggerBox()
 
         ''' MAIN LAYOUT '''
         # Main vertical Layout
@@ -144,11 +143,12 @@ class MainWindow(QtWidgets.QMainWindow):
         root_layout.addWidget(self.vicon_box)
         root_layout.addLayout(self.sensor_layout)
         root_layout.addLayout(start_stop_layout)
-        root_layout.addWidget(log_text_box)
+        root_layout.addWidget(self.log_text_box)
 
         self.central_widget.setLayout(root_layout)
         self.setCentralWidget(self.central_widget)
-        # self.setLayout(root_layout)
+
+        self.change_style('dark')
 
     def set_title(self):
         self.setWindowTitle("TMOS App - " + self.experiment_name)
@@ -167,6 +167,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_instance.setStyleSheet(self.style_dark)
         else:
             self.app_instance.setStyleSheet("")
+
+        self.log_text_box.adapt_colors_to_mode(style)
 
     def start_all_button_clicked(self):
         logging.info("Starting all connected devices")
