@@ -10,17 +10,49 @@ from lib import QVicon
 logging.getLogger().setLevel(logging.INFO)
 
 
-class MainWindow(QtWidgets.QWidget):
-    def __init__(self, *args):
-        QtWidgets.QWidget.__init__(self, *args)
+def load_style(filename):
+    # Add the stylesheet to the application
+    try:
+        fh = open(filename, "r")
+        return fh.read()
+    except FileNotFoundError:
+        pass
 
+    return ""
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, app_instance, *args):
+        super().__init__(*args)
+
+        self.app_instance = app_instance
+
+        ''' WINDOW CONFIGURATION '''
         # Frameless
         # self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
 
         self.experiment_name = "Experiment 0"
         self.set_title()
 
+        self.style_dark = load_style("style/dark.css")
+        self.change_style('dark')
+
+        self.style_menu_dark = QtWidgets.QAction("Dark", self)
+        self.style_menu_dark.setStatusTip('Set to dark mode')
+        self.style_menu_dark.triggered.connect(lambda: self.change_style('dark'))
+
+        self.style_menu_classic = QtWidgets.QAction("Classic", self)
+        self.style_menu_classic.setStatusTip('Set to light mode')
+        self.style_menu_classic.triggered.connect(lambda: self.change_style('classic'))
+
+        main_menu = self.menuBar()
+        main_menu = main_menu.addMenu('Window')
+        main_menu.addAction(self.style_menu_dark)
+        main_menu.addAction(self.style_menu_classic)
+
         ''' CONFIGURATION '''
+        self.central_widget = QtWidgets.QWidget()
+
         # Main Layout
         self.config_box = QtWidgets.QGroupBox(self)
         self.config_box.setTitle("Configuration")
@@ -114,7 +146,9 @@ class MainWindow(QtWidgets.QWidget):
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(log_text_box)
 
-        self.setLayout(root_layout)
+        self.central_widget.setLayout(root_layout)
+        self.setCentralWidget(self.central_widget)
+        # self.setLayout(root_layout)
 
     def set_title(self):
         self.setWindowTitle("TMOS App - " + self.experiment_name)
@@ -127,6 +161,12 @@ class MainWindow(QtWidgets.QWidget):
         app_icon.addFile('img/motion_sensor_32.png', QtCore.QSize(32, 32))
         app_icon.addFile('img/motion_sensor_64.png', QtCore.QSize(64, 64))
         self.setWindowIcon(app_icon)
+
+    def change_style(self, style):
+        if style == 'dark':
+            self.app_instance.setStyleSheet(self.style_dark)
+        else:
+            self.app_instance.setStyleSheet("")
 
     def start_all_button_clicked(self):
         logging.info("Starting all connected devices")
@@ -148,14 +188,11 @@ class MainWindow(QtWidgets.QWidget):
 
     def save_config(self):
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Warning)
+        msg.setIcon(QtWidgets.QMessageBox.Critical)
 
         msg.setText("In order to make these configurations take effect all devices have to be stopped. Continue?")
-        # msg.setInformativeText("This is additional information")
         msg.setWindowTitle("Save configuration")
-        # msg.setDetailedText("The details are as follows:")
         msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-        # msg.buttonClicked.connect(self.)
 
         decision = msg.exec_()
         if decision == QtWidgets.QMessageBox.Cancel:
@@ -189,17 +226,8 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     QtCore.QThread.currentThread().setObjectName('main')
 
-    # Add the stylesheet to the application
-    try:
-        sshFile = "style/style.css"
-        fh = open(sshFile, "r")
-        app.setStyleSheet(fh.read())
-    except:
-        print('Could not open file!')
-        pass
-
     # Main window
-    main_window = MainWindow()
+    main_window = MainWindow(app)
 
     # Start
     main_window.show()
