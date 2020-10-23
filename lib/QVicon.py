@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
@@ -10,6 +11,8 @@ from lib.GlobalThread import QtGlobalWorker
 class QVicon(QtWidgets.QGroupBox):
     def __init__(self, title, exp_name, parent=None):
         super(QVicon, self).__init__(parent)
+
+        self.time_zero = datetime.datetime.now()
 
         # Start own module logger
         self.logger = logging.getLogger('VICON')
@@ -156,6 +159,9 @@ class QVicon(QtWidgets.QGroupBox):
     def change_file_handler(self, name):
         self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
 
+    def set_reference_time(self, t0):
+        self.vicon_worker.set_reference_time(t0)
+
     @pyqtSlot(int, bool, str)
     def vicon_response_received(self, resp, success, extra):
         if resp == QtGlobalWorker.WORKER_RESPONSE['connected']:
@@ -172,6 +178,8 @@ class QVicon(QtWidgets.QGroupBox):
             self.handler_changed(success, extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['log_data']:
             self.log_data(extra)
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['error']:
+            self.log_error(extra)
 
     def vicon_connected(self, success):
         if success:
@@ -245,6 +253,9 @@ class QVicon(QtWidgets.QGroupBox):
 
     def log_data(self, data):
         self.logger.info(data)
+
+    def log_error(self, msg):
+        self.logger.error(msg)
 
     def is_connected(self):
         return self.disconnect_button.isEnabled()

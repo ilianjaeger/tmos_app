@@ -1,4 +1,6 @@
 import logging
+import datetime
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 
@@ -44,6 +46,8 @@ class QtGlobalWorker(QtCore.QObject):
 
     def __init__(self, title, exp_name, interval):
         super().__init__()
+
+        self._time_zero = datetime.datetime.now()
 
         # Set variables
         self._title = title
@@ -99,10 +103,12 @@ class QtGlobalWorker(QtCore.QObject):
         data = self._interface.process_data()
 
         if data != '':
-            self._data_logger.debug(data)
+            elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
+            log_text = "{} {}".format(elapsed_time_ms, data)
+            self._data_logger.debug(log_text)
 
             if self._log_to_console:
-                self._worker_response.emit(self.WORKER_RESPONSE['log_data'], True, data)
+                self._worker_response.emit(self.WORKER_RESPONSE['log_data'], True, log_text)
 
     def connect(self, port):
         if self._interface.open_port(port):
@@ -156,6 +162,9 @@ class QtGlobalWorker(QtCore.QObject):
 
         self._worker_response.emit(self.WORKER_RESPONSE['handler_changed'], True,
                                   "[{}]".format(QtGlobalWorker.get_log_filename(self._exp_name, self._title)))
+
+    def set_reference_time(self, t0):
+        self._time_zero = t0
 
     def change_log_to_console(self, activate):
         self._log_to_console = activate == 'True'

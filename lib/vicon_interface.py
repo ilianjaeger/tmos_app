@@ -92,7 +92,7 @@ class ViconInterface(GlobalInterface.GlobalInterface):
                 Returns true if it is connected
         """
 
-        if not self.is_connected():
+        if not self.is_connected() or not self._comm.GetFrame():
             return False
         return True
 
@@ -122,19 +122,21 @@ class ViconInterface(GlobalInterface.GlobalInterface):
         if not self.is_connected():
             return ''
 
+        # print("Trying")
+        # return ''
         try:
-            self._comm.GetFrame()
+            if self._comm.GetFrame():
+                names = self._comm.GetSubjectNames()
+                for i in names:
+                    # print('obj', i)
+                    segment_names = self._comm.GetSegmentNames(i)
+                    for s in segment_names:
+                        # print('segment', s)
+                        pos = self._comm.GetSegmentGlobalTranslation(i, s)
+                        return "{}, {}, {}, {}".format(s, pos[0][0], pos[0][1], pos[0][2])
         except ViconDataStream.DataStreamException as e:
-            self._comm.GetFrame()
-
-        names = self._comm.GetSubjectNames()
-        for i in names:
-            # print('obj', i)
-            segmentNames = self._comm.GetSegmentNames(i)
-            for s in segmentNames:
-                # print('segment', s)
-                pos = self._comm.GetSegmentGlobalTranslation(i, s)
-                return "{}, {}, {}".format(pos[0][0], pos[0][1], pos[0][2])
+            pass
+            # self._comm.GetFrame()
 
         return ''
 

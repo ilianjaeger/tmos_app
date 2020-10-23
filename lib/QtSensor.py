@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
@@ -11,6 +12,8 @@ from lib.GlobalThread import QtGlobalWorker
 class QtSensor(QtWidgets.QGroupBox):
     def __init__(self, title, exp_name, parent=None):
         super(QtSensor, self).__init__(parent)
+
+        self.time_zero = datetime.datetime.now()
 
         # Start own module logger
         self.logger = logging.getLogger('PC.' + title.replace(" ", "_").upper())
@@ -134,6 +137,9 @@ class QtSensor(QtWidgets.QGroupBox):
 
     def change_file_handler(self, name):
         self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
+
+    def set_reference_time(self, t0):
+        self.serial_worker.set_reference_time(t0)
 
     @pyqtSlot(int, bool, str)
     def serial_response_received(self, resp, success, extra):

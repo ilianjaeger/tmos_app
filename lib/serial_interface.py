@@ -171,7 +171,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
 
             log_text = ""
             for i in list_data:
-                log_text = log_text + "[" + str(i) + "],"
+                log_text = log_text + " " + str(i)
 
             logger.debug(log_text)
 
