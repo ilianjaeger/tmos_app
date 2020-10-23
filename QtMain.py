@@ -7,6 +7,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from lib import QtLogger
 from lib import QtSensor
 from lib import QVicon
+from lib import QtPlotter
 
 # Initialize logger
 logging.getLogger().setLevel(logging.INFO)
@@ -244,6 +245,11 @@ if __name__ == '__main__':
     # Main window
     main_window = MainWindow(app)
 
+    # Plotter
+    plotter = QtPlotter.QtLivePlotter()
+
     # Start
     main_window.show()
+    plotter.show()
+
     app.exec_()
