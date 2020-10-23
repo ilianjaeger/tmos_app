@@ -1,5 +1,5 @@
 from lib.serial_interface import SerialInterface
-from lib.GlobalThread import QtGlobalWorker
+from lib.template.GlobalThread import QtGlobalWorker
 
 
 class QtSerialWorker(QtGlobalWorker):

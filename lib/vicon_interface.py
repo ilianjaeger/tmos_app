@@ -1,13 +1,12 @@
-import time
 import logging
-import datetime
 
-from lib import GlobalInterface
+from lib.template import GlobalInterface
 from vicon_dssdk import ViconDataStream
 
 # Start vicon logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('VICON.COMM')
 logger.setLevel(logging.DEBUG)
+
 
 ################################################
 # VICON COMMUNICATION                          #

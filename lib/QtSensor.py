@@ -6,7 +6,7 @@ from PyQt5.QtCore import pyqtSlot
 
 from lib import serial_interface
 from lib.QtSerialThread import QtSerialWorker
-from lib.GlobalThread import QtGlobalWorker
+from lib.template.GlobalThread import QtGlobalWorker
 
 
 class QtSensor(QtWidgets.QGroupBox):

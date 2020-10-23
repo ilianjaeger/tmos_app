@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
 
 from lib.QtViconThread import QtViconWorker
-from lib.GlobalThread import QtGlobalWorker
+from lib.template.GlobalThread import QtGlobalWorker
 
 
 class QVicon(QtWidgets.QGroupBox):

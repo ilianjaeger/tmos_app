@@ -5,7 +5,7 @@ import serial
 import logging
 import datetime
 
-from lib import GlobalInterface
+from lib.template import GlobalInterface
 
 # Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
