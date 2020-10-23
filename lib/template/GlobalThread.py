@@ -104,7 +104,7 @@ class QtGlobalWorker(QtCore.QObject):
 
         if data != '':
             elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
-            log_text = "{} {}".format(elapsed_time_ms, data)
+            log_text = "{},{}".format(elapsed_time_ms, data)
             self._data_logger.debug(log_text)
 
             if self._log_to_console:

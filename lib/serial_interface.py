@@ -168,10 +168,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
                 return ''
 
             list_data = list_data[1:n - 1]  # First and last elements are garbage
-
-            log_text = ""
-            for i in list_data:
-                log_text = log_text + " " + str(i)
+            log_text = ','.join(map(str, list_data))
 
             logger.debug(log_text)
 

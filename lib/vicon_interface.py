@@ -132,7 +132,7 @@ class ViconInterface(GlobalInterface.GlobalInterface):
                     for s in segment_names:
                         # print('segment', s)
                         pos = self._comm.GetSegmentGlobalTranslation(i, s)
-                        return "{}, {}, {}, {}".format(s, pos[0][0], pos[0][1], pos[0][2])
+                        return "{},{},{},{}".format(s, pos[0][0], pos[0][1], pos[0][2])
         except ViconDataStream.DataStreamException as e:
             pass
             # self._comm.GetFrame()
