@@ -1,4 +1,5 @@
 import logging
+import socket
 
 from lib.template import GlobalInterface
 from vicon_dssdk import ViconDataStream
@@ -41,8 +42,18 @@ class ViconInterface(GlobalInterface.GlobalInterface):
             if self._comm is None:
                 self._comm = ViconDataStream.Client()
 
+            # The Connect function from the Vicon library is not thread safe. In order to check if it is possible
+            # to connect to the camera system (IP reachable), try it with socket instead
+            try:
+                s = socket.create_connection((port, 801), timeout=0.1)
+                s.close() # Don't forget to close it before trying it with the Vicon library!
+            except socket.timeout:
+                return False
+
+            # Connect
             self._comm.Connect(port)
 
+            # Failed connect
             if not self._comm.IsConnected():
                 return False
 
@@ -53,8 +64,8 @@ class ViconInterface(GlobalInterface.GlobalInterface):
             self._comm.EnableMarkerData()
             self._comm.EnableUnlabeledMarkerData()
             self._comm.EnableDeviceData()
-            # self._comm.SetAxisMapping(ViconDataStream.CoreClient.Forward, ViconDataStream.CoreClient.Left,
-            #                           ViconDataStream.CoreClient.Up)
+            # self._comm.SetAxisMapping(ViconDataStream.CoreClient.EForward, ViconDataStream.CoreClient.ELeft,
+            #                           ViconDataStream.CoreClient.EUp)
 
             logger.debug("Vicon configuration complete!")
         except ViconDataStream.DataStreamException:
