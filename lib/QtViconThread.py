@@ -19,13 +19,16 @@ class QtViconWorker(QtGlobalWorker):
     def read_data(self):
         data = self._interface.process_data()
 
-        if data != '':
-            elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
-            log_text = "{},{}".format(elapsed_time_ms, data)
-            self._data_logger.debug(log_text)
-
-            if self._log_to_console:
-                self._worker_response.emit(self.WORKER_RESPONSE['log_data'], True, log_text)
-        else:
-            self._worker_response.emit(self.WORKER_RESPONSE['error'], True, "Empty frame! Stopping...")
+        if data == -1:
+            self._worker_response.emit(self.WORKER_RESPONSE['error'], True,
+                                       "Lost connection or empty frame! Stopping...")
             self.stop_read()
+        elif type(data) == str:
+            elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
+
+            for log_data in filter(None, data.split('\t')):
+                log_text = "{},{}".format(elapsed_time_ms, log_data)
+                self._data_logger.debug(log_text)
+
+                if self._log_to_console:
+                    self._worker_response.emit(self.WORKER_RESPONSE['log_data'], True, log_text)

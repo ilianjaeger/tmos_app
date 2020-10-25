@@ -1,21 +1,26 @@
 from random import randint
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 
 import pyqtgraph as pg
 
 
-class QtLivePlotter(pg.PlotWidget):
+class QtLivePlotter(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(QtLivePlotter, self).__init__(*args, **kwargs)
+
+        self.graph = pg.PlotWidget()
+
+        self.setWindowTitle("Cool Plotter")
+        self.setCentralWidget(self.graph)
 
         self.x = list(range(0, 200, 1))
         self.y = list(range(0, 200, 1))
 
-        self.setBackground('w')
+        self.graph.setBackground('w')
         self.new_pen = pg.mkPen(width=2, style=QtCore.Qt.DashLine)
 
-        self.line = self.plot(self.x, self.y, pen=self.new_pen)
+        self.line = self.graph.plot(self.x, self.y, pen=self.new_pen)
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(20)

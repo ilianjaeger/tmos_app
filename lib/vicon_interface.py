@@ -130,25 +130,25 @@ class ViconInterface(GlobalInterface.GlobalInterface):
         """
 
         if not self.is_connected():
-            return ''
+            return -1
 
-        # print("Trying")
-        # return ''
         try:
             if self._comm.GetFrame():
                 names = self._comm.GetSubjectNames()
+                log_text = ''
                 for i in names:
                     # print('obj', i)
                     segment_names = self._comm.GetSegmentNames(i)
                     for s in segment_names:
                         # print('segment', s)
                         pos = self._comm.GetSegmentGlobalTranslation(i, s)
-                        return "{},{},{},{}".format(s, pos[0][0], pos[0][1], pos[0][2])
+                        log_text = log_text + "{},{:.2f},{:.2f},{:.2f}\t".format(s, pos[0][0], pos[0][1], pos[0][2])
+
+                return log_text
         except ViconDataStream.DataStreamException as e:
             pass
-            # self._comm.GetFrame()
 
-        return ''
+        return -1
 
     def read_text(self):
         """ Receive text from serial port.
