@@ -5,9 +5,11 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 
-def euclidean_distance(df1, df2, cols=None):
+def euclidean_distance(df1, df2=None, cols=None):
     if cols is None:
         cols = ['pos_x', 'pos_y']
+    if df2 is None:
+        return np.linalg.norm(df1[cols].values, axis=1)
     return np.linalg.norm(df1[cols].values - df2[cols].values, axis=1)
 
 
@@ -18,15 +20,15 @@ def normalize_data(df1, lim=1000):
 ''' GET DATA '''
 # TMOS
 tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
-tmos_data = pd.read_csv("output/2_Sensor_fast.log", names=tmos_col_names, index_col=0)
+tmos_data = pd.read_csv("output/1_SENSOR.log", names=tmos_col_names, index_col=0)
 tmos_data.index = tmos_data.index / 1000
 tmos_data.dist_raw = -tmos_data.dist_raw
 tmos_data.dist_filt = -tmos_data.dist_filt
-tmos_data.dist_raw = np.append([0, 0, 0, 0], pd.Series(tmos_data.dist_raw).rolling(window=5).mean().iloc[5 - 1:].values)
+# tmos_data.dist_raw = np.append([0, 0, 0, 0], pd.Series(tmos_data.dist_raw).rolling(window=5).mean().iloc[5 - 1:].values)
 
 # Vicon
 vicon_col_names = ["obj", "pos_x", "pos_y", "pos_z"]
-vicon_data = pd.read_csv("output/2_Vicon_fast.log", names=vicon_col_names, index_col=0,
+vicon_data = pd.read_csv("output/1_VICON.log", names=vicon_col_names, index_col=0,
                          dtype={'obj': object})
 vicon_data.index = vicon_data.index / 1000
 
@@ -74,29 +76,14 @@ combined_ax.plot(merged_data.index, merged_data.vel, label="Velocity")
 plt.grid(True)
 plt.legend()'''
 
-print(merged_data.dist_raw.min())
+fig, combined_ax = plt.subplots(2)
+combined_ax[0].plot(merged_data.index, merged_data.dist_raw, label="TMOS dist raw")
+combined_ax[0].plot(merged_data.index, merged_data.dist_filt, label="TMOS dist filtered")
+combined_ax[0].plot(merged_data.index, merged_data.shift(periods=-85).dist_filt, label="TMOS dist filtered (shift)")
+combined_ax[0].plot(merged_data.index, merged_data.true_dist, label="True distance")
+combined_ax[0].grid(True)
+combined_ax[0].legend()
 
-# merged_data.true_dist = merged_data.true_dist - merged_data.true_dist.min()
-
-# merged_data.dist_raw = (merged_data.dist_raw - merged_data.dist_raw.min())
-
-# merged_data = merged_data[(merged_data.index > 2) & (merged_data.index < 23.5)]
-
-# Distance Error
-error_fig = plt.figure("ERROR")
-error_ax = error_fig.add_subplot(111)
-#error_ax.plot(np.log(merged_data.dist_raw), merged_data.true_dist, label="TMOS dist raw")
-
-#error_ax.plot(merged_data.dist_raw, merged_data.true_dist, label="TMOS dist raw")
-#error_ax.plot(merged_data.dist_raw, 1380 * np.exp(0.00074212736 * merged_data.dist_raw) + 200, label="TMOS dist raw")
-
-error_ax.plot(merged_data.index, merged_data.dist_raw, label="TMOS dist raw")
-error_ax.plot(merged_data.index, merged_data.true_dist, label="True distance")
-error_ax.plot(merged_data.index, 1380 * np.exp(0.00074212736 * merged_data.dist_raw) + 200, label="True distance 2")
-
-# error_ax.plot(merged_data.index, normalize_data(merged_data.dist_raw / merged_data.true_dist), label="Distance diff error")
-# error_ax.plot(merged_data.index, np.gradient(merged_data.true_dist - (-merged_data.dist_raw), merged_data.index), label="Gradient")
-plt.grid(True)
-plt.legend()
+combined_ax[1].plot(merged_data.index, merged_data.temp, label="Temp")
 
 plt.show()
