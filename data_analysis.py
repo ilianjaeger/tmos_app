@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+from scipy.optimize import curve_fit
+
 
 def euclidean_distance(df1, df2, cols=None):
     if cols is None:
@@ -13,55 +15,88 @@ def normalize_data(df1, lim=1000):
     return lim * (df1 - df1.min()) / (df1.max() - df1.min())
 
 
-''' TMOS '''
-# Get the data
-tmos_1_col_names = ["col_2", "in_time", "col_4", "temp", "col_6", "col_7", "col_8", "col_9"]
-tmos_1_data = pd.read_csv("output/EXPERIMENT_SENSOR_2_CHARACT_SENSOR_1.log", names=tmos_1_col_names, index_col=0)
-tmos_1_data.index = tmos_1_data.index / 1000.0
-# tmos_1_data = normalize_data(tmos_1_data)
+''' GET DATA '''
+# TMOS
+tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
+tmos_data = pd.read_csv("output/2_Sensor_fast.log", names=tmos_col_names, index_col=0)
+tmos_data.index = tmos_data.index / 1000
+tmos_data.dist_raw = -tmos_data.dist_raw
+tmos_data.dist_filt = -tmos_data.dist_filt
+tmos_data.dist_raw = np.append([0, 0, 0, 0], pd.Series(tmos_data.dist_raw).rolling(window=5).mean().iloc[5 - 1:].values)
 
-tmos_fig = plt.figure()
-tmos_ax = tmos_fig.add_subplot(111)
-tmos_ax.plot(tmos_1_data.index, tmos_1_data.col_4)
-tmos_ax.plot(tmos_1_data.index, tmos_1_data.col_6)
-
-#tmos_ax.plot(tmos_1_data.index, tmos_1_data.col_7)
-
-''' VICON '''
+# Vicon
 vicon_col_names = ["obj", "pos_x", "pos_y", "pos_z"]
-vicon_data = pd.read_csv("output/EXPERIMENT_SENSOR_2_CHARACT_VICON.log", names=vicon_col_names, index_col=0,
+vicon_data = pd.read_csv("output/2_Vicon_fast.log", names=vicon_col_names, index_col=0,
                          dtype={'obj': object})
-vicon_data.index = vicon_data.index / 1000.0
+vicon_data.index = vicon_data.index / 1000
 
-TMOS_data = vicon_data.loc[vicon_data.obj == 'TMOS']
-TMOS_data = TMOS_data[~((TMOS_data.pos_x == 0) & (TMOS_data.pos_y == 0) & (TMOS_data.pos_z == 0))]
+''' PROCESS VICON DATA '''
+# Vicon data
+vicon_tmos_data = vicon_data.loc[vicon_data.obj == 'TMOS']
+vicon_tmos_data = vicon_tmos_data[
+    ~((vicon_tmos_data.pos_x == 0) & (vicon_tmos_data.pos_y == 0) & (vicon_tmos_data.pos_z == 0))]  # remove 0s
+vicon_tmos_pos = vicon_tmos_data.mean()
 
-PERSON_data = vicon_data.loc[vicon_data.obj == 'Person']
-PERSON_data = PERSON_data[~((PERSON_data.pos_x == 0) & (PERSON_data.pos_y == 0) & (PERSON_data.pos_z == 0))]
+vicon_person_data = vicon_data.loc[vicon_data.obj == 'Person']
+vicon_person_data = vicon_person_data[
+    ~((vicon_person_data.pos_x == 0) & (vicon_person_data.pos_y == 0) & (vicon_person_data.pos_z == 0))]  # Remove 0s
 
-vicon_fig = plt.figure()
+''' GET TRUE DISTANCE '''
+vicon_true_dist = pd.DataFrame(data=euclidean_distance(vicon_person_data, vicon_tmos_pos),
+                               index=vicon_person_data.index, columns=['true_dist'])
+
+''' MERGE ALL DATA '''
+merged_data = pd.concat([vicon_true_dist, tmos_data], axis=1)
+merged_data = merged_data.interpolate().ffill().bfill()  # Match data on index and fill NaNs
+
+''' GET TRUE VELOCITY ESTIMATE '''
+derivative = np.gradient(merged_data.true_dist, merged_data.index)
+
+''' PLOT RAW '''
+'''# TMOS data
+tmos_fig = plt.figure("TMOS raw data")
+tmos_ax = tmos_fig.add_subplot(111)
+tmos_ax.plot(merged_data.index, merged_data.dist_raw)
+tmos_ax.plot(merged_data.index, merged_data.dist_filt)
+
+# Person trajecotry
+vicon_fig = plt.figure("Person trajectory")
 vicon_ax = vicon_fig.add_subplot(111, projection='3d')
-vicon_ax.plot(xs=PERSON_data.pos_x, ys=PERSON_data.pos_y, zs=PERSON_data.pos_z)
-
-''' DISTANCE '''
-dist = pd.DataFrame(data=euclidean_distance(PERSON_data, TMOS_data.mean()), index=PERSON_data.index, columns=['dist'])
-dist = normalize_data(dist)
-
-# Better tmos_1_data
-print(tmos_1_data.col_6.max())
-processed_tmos_1_data = -tmos_1_data.col_6  # tmos_1_data.col_6.max() - tmos_1_data.col_6
-processed_tmos_1_data = normalize_data(processed_tmos_1_data)
-
-processed_raw = normalize_data(-tmos_1_data.col_4)
+vicon_ax.plot(xs=vicon_person_data.pos_x, ys=vicon_person_data.pos_y, zs=vicon_person_data.pos_z)
 
 combined_fig = plt.figure()
 combined_ax = combined_fig.add_subplot(111)
-# combined_ax.plot(tmos_1_data.index, tmos_1_data.col_4, label="Not filtered")
-# combined_ax.plot(tmos_1_data.index, tmos_1_data.col_6, label="Filtered")
-combined_ax.plot(tmos_1_data.index, processed_tmos_1_data, label="Better filtered")
-combined_ax.plot(dist.index, dist.dist, label="True distance")
-combined_ax.plot(tmos_1_data.index, tmos_1_data.col_7, label="Speed")
-combined_ax.plot(tmos_1_data.index, processed_raw, label="Speed")
+combined_ax.plot(merged_data.index, -merged_data.dist_raw, label="TMOS dist raw")
+combined_ax.plot(merged_data.index, -merged_data.dist_filt, label="TMOS dist filtered")
+combined_ax.plot(merged_data.index, merged_data.true_dist, label="True distance")
+# combined_ax.plot(dist.index, -derivative, label="True gradient (velocity)")
+combined_ax.plot(merged_data.index, merged_data.vel, label="Velocity")
+plt.grid(True)
+plt.legend()'''
+
+print(merged_data.dist_raw.min())
+
+# merged_data.true_dist = merged_data.true_dist - merged_data.true_dist.min()
+
+# merged_data.dist_raw = (merged_data.dist_raw - merged_data.dist_raw.min())
+
+# merged_data = merged_data[(merged_data.index > 2) & (merged_data.index < 23.5)]
+
+# Distance Error
+error_fig = plt.figure("ERROR")
+error_ax = error_fig.add_subplot(111)
+#error_ax.plot(np.log(merged_data.dist_raw), merged_data.true_dist, label="TMOS dist raw")
+
+#error_ax.plot(merged_data.dist_raw, merged_data.true_dist, label="TMOS dist raw")
+#error_ax.plot(merged_data.dist_raw, 1380 * np.exp(0.00074212736 * merged_data.dist_raw) + 200, label="TMOS dist raw")
+
+error_ax.plot(merged_data.index, merged_data.dist_raw, label="TMOS dist raw")
+error_ax.plot(merged_data.index, merged_data.true_dist, label="True distance")
+error_ax.plot(merged_data.index, 1380 * np.exp(0.00074212736 * merged_data.dist_raw) + 200, label="True distance 2")
+
+# error_ax.plot(merged_data.index, normalize_data(merged_data.dist_raw / merged_data.true_dist), label="Distance diff error")
+# error_ax.plot(merged_data.index, np.gradient(merged_data.true_dist - (-merged_data.dist_raw), merged_data.index), label="Gradient")
+plt.grid(True)
 plt.legend()
 
 plt.show()
