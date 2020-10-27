@@ -28,11 +28,10 @@ def lin_fit(x, a, b):
 ''' GET DATA '''
 # TMOS
 tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
-tmos_data = pd.read_csv("output/2_TEMP_3_SENSOR_1.log", names=tmos_col_names, index_col=0)
+tmos_data = pd.read_csv("output/1_TEMP_3_SENSOR_1.log", names=tmos_col_names, index_col=0)
 tmos_data.index = tmos_data.index / 1000
 tmos_data.dist_raw = -tmos_data.dist_raw
 tmos_data.dist_filt = -tmos_data.dist_filt
-# tmos_data.dist_raw = np.append([0, 0, 0, 0], pd.Series(tmos_data.dist_raw).rolling(window=5).mean().iloc[5 - 1:].values)
 
 ''' LINEAR TEMP FIT '''
 popt, _ = curve_fit(lin_fit, tmos_data.temp, tmos_data.dist_raw)
@@ -43,7 +42,6 @@ fig, axes = plt.subplots(2, 1, sharex='col')
 fig.suptitle("Sensor raw data")
 axes[0].plot(tmos_data.index, tmos_data.dist_raw, label="TMOS dist raw")
 axes[0].plot(tmos_data.index, tmos_data.dist_filt, label="TMOS dist filtered")
-#axes[0].plot(tmos_data.index, tmos_data.dist_raw + popt[0] * , label="TMOS dist raw temp comp")
 axes[0].set_title("TMOS raw/comp data")
 axes[0].grid(True)
 axes[0].legend()
