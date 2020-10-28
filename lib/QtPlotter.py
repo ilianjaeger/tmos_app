@@ -4,20 +4,20 @@ from random import randint
 from PyQt5 import QtCore, QtWidgets
 
 import pyqtgraph as pg
+from pyqtgraph.dockarea import Dock
 
 
 data_plot_queue = queue.Queue()
 
 
-class QtLivePlotter(QtWidgets.QMainWindow):
+class QtLivePlotter(Dock):
     def __init__(self, *args, **kwargs):
         super(QtLivePlotter, self).__init__(*args, **kwargs)
 
         # Graph
         self.graph = pg.PlotWidget()
 
-        self.setWindowTitle("Cool Plotter")
-        self.setCentralWidget(self.graph)
+        self.addWidget(self.graph)
 
         # Use 200 points
         self.x = 200 * [0]

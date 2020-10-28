@@ -3,6 +3,7 @@ import logging
 import datetime
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from pyqtgraph.dockarea import *
 
 from lib import QtLogger
 from lib import QtSensor
@@ -31,9 +32,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app_instance = app_instance
 
         ''' WINDOW CONFIGURATION '''
-        # Frameless
-        # self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
-
         self.experiment_name = "Experiment 0"
         self.set_title()
 
@@ -52,9 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
         main_menu.addAction(self.style_menu_dark)
         main_menu.addAction(self.style_menu_classic)
 
-        ''' CONFIGURATION '''
-        self.central_widget = QtWidgets.QWidget()
-
+        ''' WIDGET CONFIGURATION '''
         # Main Layout
         self.config_box = QtWidgets.QGroupBox(self)
         self.config_box.setTitle("Configuration")
@@ -100,11 +96,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config_layout.addWidget(self.mode_select_8)
         self.config_layout.addWidget(self.mode_select_32)
 
-        ''' VICON '''
         # Vicon instance
         self.vicon_box = QVicon.QVicon("Vicon", self.experiment_name)
 
-        ''' SENSORS '''
         # Sensors
         self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, self)
         self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, self)
@@ -118,7 +112,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sensor_layout.addWidget(self.sensor_box_3)
         self.sensor_layout.addWidget(self.sensor_box_4)
 
-        ''' START/STOP BUTTONS '''
         # Start button
         self.start_all_button = QtWidgets.QPushButton(self)
         self.start_all_button.setText('START ALL')
@@ -148,9 +141,30 @@ class MainWindow(QtWidgets.QMainWindow):
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(self.log_text_box)
 
-        self.central_widget.setLayout(root_layout)
-        self.setCentralWidget(self.central_widget)
+        # Main central widget (main content)
+        self.main_central_widget = QtWidgets.QWidget()
+        self.main_central_widget.setLayout(root_layout)
 
+        # Docking area
+        self.dock_area = DockArea()
+
+        # Dock for the main window
+        self.main_dock = Dock("Main configuration")
+        self.main_dock.addWidget(self.main_central_widget)
+
+        # Dock for the plotter
+        self.plotter_dock = QtPlotter.QtLivePlotter("Data plots")
+
+        # Add docks to dock area
+        self.dock_area.addDock(self.plotter_dock)
+        self.dock_area.addDock(self.main_dock)
+
+        self.dock_area.moveDock(self.main_dock, 'above', self.plotter_dock)
+
+        # Set dock area as main window central widget
+        self.setCentralWidget(self.dock_area)
+
+        # Set dark theme as default
         self.change_style('dark')
 
     def set_title(self):
@@ -245,11 +259,7 @@ if __name__ == '__main__':
     # Main window
     main_window = MainWindow(app)
 
-    # Plotter
-    plotter = QtPlotter.QtLivePlotter()
-
     # Start
     main_window.show()
-    plotter.show()
 
     app.exec_()
