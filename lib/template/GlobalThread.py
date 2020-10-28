@@ -4,6 +4,8 @@ import datetime
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 
+from lib.QtPlotter import data_plot_queue
+
 
 ################################################
 # BASE THREAD WORKER FOR SENSORS               #
@@ -57,6 +59,9 @@ class QtGlobalWorker(QtCore.QObject):
         # Log sensor data to console
         self._log_to_console = False
 
+        # Log to data plotter
+        self._log_to_plotter = True
+
         # Global interface
         self._interface = None
 
@@ -104,6 +109,10 @@ class QtGlobalWorker(QtCore.QObject):
 
         if data != '':
             elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
+
+            if self._log_to_plotter:
+                data_plot_queue.put({"name": self._title, "x": elapsed_time_ms / 1000.0, "y": int(float(data.split(',')[2]))})
+
             log_text = "{},{}".format(elapsed_time_ms, data)
             self._data_logger.debug(log_text)
 
