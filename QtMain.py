@@ -141,16 +141,23 @@ class MainWindow(QtWidgets.QMainWindow):
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(self.log_text_box)
 
+        # scroll bar
+        self.scroll = QtWidgets.QScrollArea(self)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scroll.setWidgetResizable(True)
+
         # Main central widget (main content)
-        self.main_central_widget = QtWidgets.QWidget()
+        self.main_central_widget = QtWidgets.QWidget(self.scroll)
         self.main_central_widget.setLayout(root_layout)
+        self.scroll.setWidget(self.main_central_widget)
 
         # Docking area
         self.dock_area = DockArea()
 
         # Dock for the main window
         self.main_dock = Dock("Main configuration")
-        self.main_dock.addWidget(self.main_central_widget)
+        self.main_dock.addWidget(self.scroll)
 
         # Dock for the plotter
         self.plotter_dock = QtPlotter.QtLivePlotter("Data plots")
@@ -166,6 +173,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set dark theme as default
         self.change_style('dark')
+
+    def adjust_widget_size(self):
+        self.main_central_widget.adjustSize()
+        self.resize(self.main_central_widget.sizeHint())
 
     def set_title(self):
         self.setWindowTitle("TMOS App - " + self.experiment_name)
@@ -261,5 +272,6 @@ if __name__ == '__main__':
 
     # Start
     main_window.show()
+    main_window.adjust_widget_size()
 
     app.exec_()
