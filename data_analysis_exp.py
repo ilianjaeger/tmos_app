@@ -124,8 +124,11 @@ sensor_data_to_compare = get_sensor_and_vicon_data("output/2_EVERYTHING_SENSOR_1
 
 fitting_function = get_fit_func(sensor_data_to_fit, 5, 7, 16, False)  # 22.5, 41 (EVERYTHING)
 
-plot_general_data(sensor_data_to_fit, fitting_function)
+plot_general_data(sensor_data_to_fit)
+#plot_general_data(sensor_data_to_fit, fitting_function)
 plot_general_data(sensor_data_to_compare)
+
+
 
 plt.show()
 

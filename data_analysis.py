@@ -20,70 +20,31 @@ def normalize_data(df1, lim=1000):
 ''' GET DATA '''
 # TMOS
 tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
-tmos_data = pd.read_csv("output/1_SENSOR.log", names=tmos_col_names, index_col=0)
+tmos_data = pd.read_csv("output/door/1_DOOR_TOP_TILT.log", names=tmos_col_names, index_col=0)
 tmos_data.index = tmos_data.index / 1000
-tmos_data.dist_raw = -tmos_data.dist_raw
-tmos_data.dist_filt = -tmos_data.dist_filt
-# tmos_data.dist_raw = np.append([0, 0, 0, 0], pd.Series(tmos_data.dist_raw).rolling(window=5).mean().iloc[5 - 1:].values)
+#tmos_data.dist_raw = -tmos_data.dist_raw
+#tmos_data.dist_filt = -tmos_data.dist_filt
 
-# Vicon
-vicon_col_names = ["obj", "pos_x", "pos_y", "pos_z"]
-vicon_data = pd.read_csv("output/1_VICON.log", names=vicon_col_names, index_col=0,
-                         dtype={'obj': object})
-vicon_data.index = vicon_data.index / 1000
-
-''' PROCESS VICON DATA '''
-# Vicon data
-vicon_tmos_data = vicon_data.loc[vicon_data.obj == 'TMOS']
-vicon_tmos_data = vicon_tmos_data[
-    ~((vicon_tmos_data.pos_x == 0) & (vicon_tmos_data.pos_y == 0) & (vicon_tmos_data.pos_z == 0))]  # remove 0s
-vicon_tmos_pos = vicon_tmos_data.mean()
-
-vicon_person_data = vicon_data.loc[vicon_data.obj == 'Person']
-vicon_person_data = vicon_person_data[
-    ~((vicon_person_data.pos_x == 0) & (vicon_person_data.pos_y == 0) & (vicon_person_data.pos_z == 0))]  # Remove 0s
-
-''' GET TRUE DISTANCE '''
-vicon_true_dist = pd.DataFrame(data=euclidean_distance(vicon_person_data, vicon_tmos_pos),
-                               index=vicon_person_data.index, columns=['true_dist'])
-
-''' MERGE ALL DATA '''
-merged_data = pd.concat([vicon_true_dist, tmos_data], axis=1)
-merged_data = merged_data.interpolate().ffill().bfill()  # Match data on index and fill NaNs
-
-''' GET TRUE VELOCITY ESTIMATE '''
-derivative = np.gradient(merged_data.true_dist, merged_data.index)
-
-''' PLOT RAW '''
-'''# TMOS data
-tmos_fig = plt.figure("TMOS raw data")
-tmos_ax = tmos_fig.add_subplot(111)
-tmos_ax.plot(merged_data.index, merged_data.dist_raw)
-tmos_ax.plot(merged_data.index, merged_data.dist_filt)
-
-# Person trajecotry
-vicon_fig = plt.figure("Person trajectory")
-vicon_ax = vicon_fig.add_subplot(111, projection='3d')
-vicon_ax.plot(xs=vicon_person_data.pos_x, ys=vicon_person_data.pos_y, zs=vicon_person_data.pos_z)
-
-combined_fig = plt.figure()
-combined_ax = combined_fig.add_subplot(111)
-combined_ax.plot(merged_data.index, -merged_data.dist_raw, label="TMOS dist raw")
-combined_ax.plot(merged_data.index, -merged_data.dist_filt, label="TMOS dist filtered")
-combined_ax.plot(merged_data.index, merged_data.true_dist, label="True distance")
-# combined_ax.plot(dist.index, -derivative, label="True gradient (velocity)")
-combined_ax.plot(merged_data.index, merged_data.vel, label="Velocity")
-plt.grid(True)
-plt.legend()'''
-
-fig, combined_ax = plt.subplots(2)
-combined_ax[0].plot(merged_data.index, merged_data.dist_raw, label="TMOS dist raw")
-combined_ax[0].plot(merged_data.index, merged_data.dist_filt, label="TMOS dist filtered")
-combined_ax[0].plot(merged_data.index, merged_data.shift(periods=-85).dist_filt, label="TMOS dist filtered (shift)")
-combined_ax[0].plot(merged_data.index, merged_data.true_dist, label="True distance")
+fig, combined_ax = plt.subplots(4, sharex='col')
+combined_ax[0].plot(tmos_data.index, tmos_data.dist_raw, label="Sensor value 1")
+combined_ax[0].plot(tmos_data.index, tmos_data.dist_filt, label="Sensor value 2")
+combined_ax[0].set_ylabel("Sensor value 1 and 2")
 combined_ax[0].grid(True)
 combined_ax[0].legend()
 
-combined_ax[1].plot(merged_data.index, merged_data.temp, label="Temp")
+combined_ax[1].plot(tmos_data.index, tmos_data.vel)
+combined_ax[1].set_ylabel("Velocity")
+combined_ax[1].grid(True)
+
+
+combined_ax[2].plot(tmos_data.index, tmos_data.bin_1, label="Sensor value 3")
+combined_ax[2].plot(tmos_data.index, tmos_data.bin_2, label="Sensor value 4")
+combined_ax[2].set_ylabel("Sensor value 3 and 4")
+combined_ax[2].grid(True)
+
+combined_ax[3].plot(tmos_data.index, tmos_data.temp)
+combined_ax[3].set_ylabel("Temperature")
+combined_ax[3].set_xlabel("Time [s]")
+combined_ax[3].grid(True)
 
 plt.show()
