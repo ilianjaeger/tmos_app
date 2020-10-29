@@ -8,9 +8,9 @@ from lib.QtViconThread import QtViconWorker
 from lib.template.GlobalThread import QtGlobalWorker
 
 
-class QVicon(QtWidgets.QGroupBox):
+class QtVicon(QtWidgets.QGroupBox):
     def __init__(self, title, exp_name, parent=None):
-        super(QVicon, self).__init__(parent)
+        super(QtVicon, self).__init__(parent)
 
         self.time_zero = datetime.datetime.now()
 
@@ -130,37 +130,39 @@ class QVicon(QtWidgets.QGroupBox):
 
     @pyqtSlot(int)
     def console_log_changed(self, checked):
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['console'],
-                                                           str(self.console_log_check.isChecked()))
+        self.send_command('console', str(self.console_log_check.isChecked()))
 
     @pyqtSlot()
     def connect_button_clicked(self):
         self.logger.info('Connecting Vicon...')
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['connect'], self.vicon_worker.get_instance().get_port())
+        self.send_command('connect', self.vicon_worker.get_instance().get_port())
 
     @pyqtSlot()
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting Vicon...')
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['disconnect'], "")
+        self.send_command('disconnect')
 
     @pyqtSlot()
     def start_button_clicked(self):
         self.logger.info('Starting...')
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['start'], '')
+        self.send_command('start')
 
     @pyqtSlot()
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['stop'], '')
+        self.send_command('stop')
 
     def change_mode(self, mode):
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['mode'], str(mode))
+        self.send_command('mode', str(mode))
 
     def change_file_handler(self, name):
-        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
+        self.send_command('handler', str(name))
 
     def set_reference_time(self, t0):
         self.vicon_worker.set_reference_time(t0)
+
+    def send_command(self, comm_id, comm_arg=''):
+        self.vicon_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND[comm_id], comm_arg)
 
     @pyqtSlot(int, bool, str)
     def vicon_response_received(self, resp, success, extra):
@@ -270,11 +272,3 @@ class QVicon(QtWidgets.QGroupBox):
         self.disconnect_button.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
-
-
-'''
-    
-
-    def get_IP_address(self):
-        return "192.168.0.1"
-        '''

@@ -19,7 +19,7 @@ class QLoggerBox(QtWidgets.QGroupBox):
     COLORS = {
         'WARNING': "orange",
         'INFO': "black",
-        'DEBUG': "blue",
+        'DEBUG': "dodgerblue",
         'CRITICAL': "orange",
         'ERROR': "red"
     }

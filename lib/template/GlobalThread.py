@@ -43,10 +43,16 @@ class QtGlobalWorker(QtCore.QObject):
         'log_data': 7
     }
 
+    DATA_TYPES = {
+        'nan': 0,
+        'tmos': 1,
+        'vicon': 2
+    }
+
     _worker_response = QtCore.pyqtSignal(int, bool, str)
     _worker_command = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, title, exp_name, interval):
+    def __init__(self, title, exp_name, interval, data_type):
         super().__init__()
 
         self._time_zero = datetime.datetime.now()
@@ -55,6 +61,7 @@ class QtGlobalWorker(QtCore.QObject):
         self._title = title
         self._exp_name = exp_name
         self._interval = interval
+        self.data_type = data_type
 
         # Log sensor data to console
         self._log_to_console = False
@@ -84,8 +91,6 @@ class QtGlobalWorker(QtCore.QObject):
 
     @pyqtSlot(int, str)
     def received_command(self, command, arg):
-        # print("[%s] Received command" % QtCore.QThread.currentThread().objectName())
-
         if command == self.WORKER_COMMAND['connect']:
             self.connect(arg)
         elif command == self.WORKER_COMMAND['disconnect']:
@@ -103,63 +108,46 @@ class QtGlobalWorker(QtCore.QObject):
 
     @pyqtSlot()
     def read_data(self):
-        # print("[%s] Timeout reached" % QtCore.QThread.currentThread().objectName())
-
         data = self._interface.process_data()
 
-        if data != '':
+        if data == -1:
+            self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
+            self.stop_read()
+        elif type(data) == str and data != '':
             elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
 
-            if self._log_to_plotter:
-                data_plot_queue.put({"name": self._title, "x": elapsed_time_ms / 1000.0, "y": int(float(data.split(',')[2]))})
+            for log_data in filter(None, data.split('\t')):
+                log_text = "{},{}".format(elapsed_time_ms, log_data)
+                self._data_logger.debug(log_text)
 
-            log_text = "{},{}".format(elapsed_time_ms, data)
-            self._data_logger.debug(log_text)
+                if self._log_to_plotter:
+                    data_plot_queue.put({"id": self._title, "type": self.data_type, "time": elapsed_time_ms, "data": log_data})
 
-            if self._log_to_console:
-                self._worker_response.emit(self.WORKER_RESPONSE['log_data'], True, log_text)
+                if self._log_to_console:
+                    self.emit_response('log_data', True, log_text)
 
     def connect(self, port):
-        if self._interface.open_port(port):
-            self._worker_response.emit(self.WORKER_RESPONSE['connected'], True, "")
-        else:
-            self._worker_response.emit(self.WORKER_RESPONSE['connected'], False, "")
-
+        self.emit_response('connected', self._interface.open_port(port), "")
         self._read_timer.stop()
 
     def disconnect(self):
-        if self._interface.close_port():
-            self._worker_response.emit(self.WORKER_RESPONSE['disconnected'], True, "")
-        else:
-            self._worker_response.emit(self.WORKER_RESPONSE['disconnected'], False, "")
-
+        self.emit_response('disconnected', self._interface.close_port(), "")
         self._read_timer.stop()
 
     def start_read(self):
-        if self._interface.start_device():
-            self._worker_response.emit(self.WORKER_RESPONSE['started'], True, "")
-        else:
-            self._worker_response.emit(self.WORKER_RESPONSE['started'], False, "")
-
+        self.emit_response('started', self._interface.start_device(), "")
         self._read_timer.start()
 
     def stop_read(self):
-        if self._interface.stop_device():
-            self._worker_response.emit(self.WORKER_RESPONSE['stopped'], True, "")
-        else:
-            self._worker_response.emit(self.WORKER_RESPONSE['stopped'], False, "")
-
+        self.emit_response('stopped', self._interface.stop_device(), "")
         self._read_timer.stop()
 
-    def emit_error_signal(self):
-        self._worker_response.emit(self.WORKER_RESPONSE['error'], False, "")
-
     def change_mode(self, mode):
-        self._worker_response.emit(self.WORKER_RESPONSE['mode_changed'], self._interface.set_mode(int(mode)), "[{}]".format(mode))
+        self.emit_response('mode_changed', self._interface.set_mode(int(mode)), "[{}]".format(mode))
 
     def change_log_handler(self, exp_name):
         if exp_name == self._exp_name:
-            self._worker_response.emit(self.WORKER_RESPONSE['handler_changed'], False, "Name unchanged")
+            self.emit_response('handler_changed', False, "Name unchanged")
             return
 
         self._exp_name = exp_name
@@ -169,8 +157,16 @@ class QtGlobalWorker(QtCore.QObject):
         self._fh = QtGlobalWorker._create_and_append_new_handler(self._exp_name, self._title)  # Create new handler
         self._data_logger.addHandler(self._fh)  # Attach this new handler
 
-        self._worker_response.emit(self.WORKER_RESPONSE['handler_changed'], True,
-                                  "[{}]".format(QtGlobalWorker.get_log_filename(self._exp_name, self._title)))
+        self.emit_response('handler_changed', True, "[{}]".format(QtGlobalWorker.get_log_filename(self._exp_name, self._title)))
+
+    def emit_error_signal(self):
+        self.emit_response('error', False, "")
+
+    def emit_response(self, resp_type, resp_succ, resp_arg):
+        if resp_type not in self.WORKER_RESPONSE:
+            return
+
+        self._worker_response.emit(self.WORKER_RESPONSE[resp_type], resp_succ, resp_arg)
 
     def set_reference_time(self, t0):
         self._time_zero = t0

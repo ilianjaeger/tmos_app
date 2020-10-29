@@ -100,7 +100,7 @@ class QtSensor(QtWidgets.QGroupBox):
 
     @pyqtSlot(int)
     def console_log_changed(self, checked):
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['console'], str(self.console_log_check.isChecked()))
+        self.send_command('console', str(self.console_log_check.isChecked()))
 
     @pyqtSlot(int)
     def port_selection_change(self, i):
@@ -115,31 +115,34 @@ class QtSensor(QtWidgets.QGroupBox):
             return
 
         self.logger.info('Connecting...')
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['connect'], self.com_port_list.currentText())
+        self.send_command('connect', self.com_port_list.currentText())
 
     @pyqtSlot()
     def disconnect_button_clicked(self):
         self.logger.warning('Disconnecting...')
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['disconnect'], '')
+        self.send_command('disconnect')
 
     @pyqtSlot()
     def start_button_clicked(self):
         self.logger.info('Starting...')
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['start'], '')
+        self.send_command('start')
 
     @pyqtSlot()
     def stop_button_clicked(self):
         self.logger.info('Stopping...')
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['stop'], '')
+        self.send_command('stop')
 
     def change_mode(self, mode):
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['mode'], str(mode))
+        self.send_command('mode', str(mode))
 
     def change_file_handler(self, name):
-        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND['handler'], str(name))
+        self.send_command('handler', str(name))
 
     def set_reference_time(self, t0):
         self.serial_worker.set_reference_time(t0)
+
+    def send_command(self, comm_id, comm_arg=''):
+        self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND[comm_id], comm_arg)
 
     @pyqtSlot(int, bool, str)
     def serial_response_received(self, resp, success, extra):

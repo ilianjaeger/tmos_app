@@ -7,6 +7,6 @@ class QtSerialWorker(QtGlobalWorker):
     """
 
     def __init__(self, title, exp_name, interval):
-        super().__init__(title, exp_name, interval)
+        super().__init__(title, exp_name, interval, QtGlobalWorker.DATA_TYPES['tmos'])
 
         self._interface = SerialInterface()

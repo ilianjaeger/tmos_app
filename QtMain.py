@@ -7,7 +7,7 @@ from pyqtgraph.dockarea import *
 
 from lib import QtLogger
 from lib import QtSensor
-from lib import QVicon
+from lib import QtVicon
 from lib import QtPlotter
 
 # Initialize logger
@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config_layout.addWidget(self.mode_select_32)
 
         # Vicon instance
-        self.vicon_box = QVicon.QVicon("Vicon", self.experiment_name)
+        self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
 
         # Sensors
         self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, self)

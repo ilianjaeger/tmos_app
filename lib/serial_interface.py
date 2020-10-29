@@ -152,7 +152,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         """
 
         if not self.is_connected():
-            return ''
+            return -1
 
         try:
             recv = self.read_text()
@@ -168,14 +168,14 @@ class SerialInterface(GlobalInterface.GlobalInterface):
                 return ''
 
             list_data = list_data[1:n - 1]  # First and last elements are garbage
-            log_text = ','.join(map(str, list_data))
+            log_text = ','.join(map(str, list_data)) + '\t'
 
             logger.debug(log_text)
 
         except serial.SerialException:
             self._comm = None
             self.emit_error_signal()
-            return ''
+            return -1
 
         return log_text
 
