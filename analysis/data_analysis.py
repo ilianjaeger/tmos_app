@@ -20,7 +20,7 @@ def normalize_data(df1, lim=1000):
 ''' GET DATA '''
 # TMOS
 tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
-tmos_data = pd.read_csv("output/door/1_DOOR_TOP_TILT.log", names=tmos_col_names, index_col=0)
+tmos_data = pd.read_csv("../output/1_Sensor.log", names=tmos_col_names, index_col=0)
 tmos_data.index = tmos_data.index / 1000
 #tmos_data.dist_raw = -tmos_data.dist_raw
 #tmos_data.dist_filt = -tmos_data.dist_filt

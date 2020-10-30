@@ -119,8 +119,8 @@ def plot_general_data(data, func=None):
     combined_ax[2].grid(True)
 
 
-sensor_data_to_fit = get_sensor_and_vicon_data("output/2_LINEAR_SENSOR_1.log", "output/2_LINEAR_VICON.log")
-sensor_data_to_compare = get_sensor_and_vicon_data("output/2_EVERYTHING_SENSOR_1.log", "output/2_EVERYTHING_VICON.log")
+sensor_data_to_fit = get_sensor_and_vicon_data("../output/2_LINEAR_SENSOR_1.log", "output/2_LINEAR_VICON.log")
+sensor_data_to_compare = get_sensor_and_vicon_data("../output/2_EVERYTHING_SENSOR_1.log", "output/2_EVERYTHING_VICON.log")
 
 fitting_function = get_fit_func(sensor_data_to_fit, 5, 7, 16, False)  # 22.5, 41 (EVERYTHING)
 

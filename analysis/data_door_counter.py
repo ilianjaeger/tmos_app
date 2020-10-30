@@ -22,11 +22,12 @@ def compensate_temp(data, temp, ref_temp, ref_gradient):
 ''' GET DATA '''
 # TMOS
 tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_filt", "vel", "bin_1", "bin_2"]
-tmos_data = pd.read_csv("output/door/1_DOOR_TILT_EXTREME.log", names=tmos_col_names, index_col=0)
+tmos_data = pd.read_csv("../output/door/1_DOOR_TILT_EXTREME.log", names=tmos_col_names, index_col=0)
 
 # Get time value in seconds
 tmos_data.index = tmos_data.index / 1000
 
+# Temperature compansation
 tmos_data.dist_raw = compensate_temp(tmos_data.dist_raw, tmos_data.temp, 23.0, -1426.57019003)
 
 # Moving average

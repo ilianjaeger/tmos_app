@@ -44,8 +44,8 @@ def lin_fit(x, a, b):
 
 
 ''' GET DATA '''
-tmos_data_sensor_1 = get_sensor_data("output/1_TEMP_3_SENSOR_1.log")
-tmos_data_sensor_2 = get_sensor_data("output/2_TEMP_3_SENSOR_1.log")
+tmos_data_sensor_1 = get_sensor_data("../output/1_TEMP_3_SENSOR_1.log")
+tmos_data_sensor_2 = get_sensor_data("../output/2_TEMP_3_SENSOR_1.log")
 
 ''' LINEAR TEMP FIT '''
 popt, _ = curve_fit(lin_fit, tmos_data_sensor_1.temp, tmos_data_sensor_1.dist_raw)
