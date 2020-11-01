@@ -35,7 +35,6 @@ def moving_average(data, n_points, remove_nan=False):
     return data.rolling(n_points).mean()
 
 
-
 def get_data_from_file(filename, norm_time=True):
     final_data = dict()
 

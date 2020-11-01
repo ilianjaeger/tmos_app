@@ -1,5 +1,6 @@
+import os
 import sys
-sys.path.extend(['C:\\Users\\salzm\\OneDrive - ETHZ\\SemesterProjects\\TMOS_IR\\Code\\tmos_app', 'C:/Users/salzm/OneDrive - ETHZ/SemesterProjects/TMOS_IR/Code/tmos_app'])
+sys.path.extend([os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + os.sep + os.pardir)])
 
 import numpy as np
 import pandas as pd
@@ -11,19 +12,21 @@ from analysis import data_functions
 # merged_data = pd.concat([vicon_true_dist, tmos_data], axis=1)
 # merged_data = merged_data.interpolate().ffill().bfill()  # Match data on index and fill NaNs
 
-data = data_functions.get_data_from_file("output/2_EVERYTHING")
+data = data_functions.get_data_from_file("../output/1_STEP_FAST")
 data_functions.plot_sensor_data(data["tmos1"])
 
 merged = data_functions.merge_sensor_to_vicon(data["tmos1"], data["vicon"])
 merged = data_functions.crop_data_time(merged, 0, 100)
 
 merged.dist_raw = data_functions.compensate_temp(merged.dist_raw, merged.temp, -1695.67645297)
-
-func = data_functions.get_fit_func(merged.dist_raw.values, np.log(merged.dist_true.values), 3)
+merged.dist_raw = data_functions.moving_average(merged, 15, True).dist_raw
+merged.dist_raw = merged.shift(-10).ffill().dist_raw
 
 print(merged)
 
-fig, combined_ax = plt.subplots(2)
+func = data_functions.get_fit_func(merged.dist_raw.values, np.log(merged.dist_true.values), 5)
+
+fig, combined_ax = plt.subplots(3, sharex="col")
 combined_ax[0].plot(merged.index, merged.dist_raw, label="Sensor value 1")
 combined_ax[0].plot(merged.index, merged.dist_true, label="True distance")
 if func is not None:
@@ -32,10 +35,14 @@ combined_ax[0].set_ylabel("Sensor and true distance")
 combined_ax[0].grid(True)
 combined_ax[0].legend()
 
-combined_ax[1].plot(merged.index, merged.vel, label="Velocity")
-combined_ax[1].plot(merged.index, data_functions.moving_average(pd.DataFrame(data=np.gradient(merged.dist_raw, merged.index), index=merged.index)[0], 8), label="Velocity")
+combined_ax[1].plot(merged.index, merged.dist_true - np.exp(func(merged.dist_raw)), label="Difference true x estimated")
 combined_ax[1].grid(True)
 combined_ax[1].legend()
+
+combined_ax[2].plot(merged.index, merged.vel, label="Velocity")
+# combined_ax[2].plot(merged.index, data_functions.normalize_data(data_functions.moving_average(pd.DataFrame(data=np.gradient(merged.dist_true, merged.index), index=merged.index)[0], 8), 400), label="Velocity")
+combined_ax[2].grid(True)
+combined_ax[2].legend()
 
 _, error_ax = plt.subplots(2, sharex='col')
 error_ax[0].plot(merged.dist_raw, np.log(merged.dist_true), label="True log ratio")
