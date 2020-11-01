@@ -1,5 +1,6 @@
 import queue
 import numpy as np
+import logging
 
 from PyQt5 import QtCore
 
@@ -44,6 +45,15 @@ class QtLivePlotter(Dock):
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
+        self.lr = []
+        self.startTime = 0
+        self.mov_thresh = 2000
+        self.mov_detected = False
+        self.door_movement_array = []
+        self.door_movement_detect_time = []
+        self.door_movement_detect_pos = []
+        self.door_movement_detect_type = []
+
     def update_plot(self):
         global data_plot_queue
 
@@ -58,6 +68,9 @@ class QtLivePlotter(Dock):
                         self.create_graph(graph_id, record["id"])
 
                     self.update_graph(graph_id, self.graphs[graph_id]["plots"][record["id"]], record)
+
+                    if graph_id == "dist_raw":
+                        self.update_people_counter(record)
         except queue.Empty:
             pass
 
@@ -76,3 +89,38 @@ class QtLivePlotter(Dock):
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS[graph_id]["pos"]])
         cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
+
+    def update_people_counter(self, new_data):
+        new_dist_raw = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["dist_raw"]["pos"]])
+        if new_dist_raw > self.mov_thresh:
+            if not self.mov_detected:
+                self.startTime = new_data['time']
+                self.lr.append(pg.LinearRegionItem([self.startTime, self.startTime], movable=False))
+                self.graphs["dist_raw"]["widget"].addItem(self.lr[-1])
+
+            self.mov_detected = True
+            self.door_movement_array.append(new_dist_raw)
+            self.lr[-1].setRegion([self.startTime, new_data['time']])
+
+        else:
+            if self.mov_detected and len(self.door_movement_array) != 0:
+                # Detect type
+                index_of_max = self.door_movement_array.index(max(self.door_movement_array))
+
+                if index_of_max > len(self.door_movement_array) / 2:
+                    self.door_movement_detect_type.append("in")
+                else:
+                    self.door_movement_detect_type.append("out")
+
+                logging.info("Found new person")
+                self.door_movement_array = []
+                self.door_movement_detect_time.append(new_data['time'])
+                self.door_movement_detect_pos.append(new_dist_raw)
+                self.mov_detected = False
+
+        for item in list(self.lr):
+            if item.getRegion()[0] < self.graphs["dist_raw"]["plots"][new_data["id"]]["x"][0]:
+                self.graphs["dist_raw"]["widget"].removeItem(item)
+                self.lr.remove(item)
+            else:
+                break
