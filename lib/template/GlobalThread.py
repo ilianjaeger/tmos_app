@@ -43,16 +43,10 @@ class QtGlobalWorker(QtCore.QObject):
         'log_data': 7
     }
 
-    DATA_TYPES = {
-        'nan': 0,
-        'tmos': 1,
-        'vicon': 2
-    }
-
     _worker_response = QtCore.pyqtSignal(int, bool, str)
     _worker_command = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, title, exp_name, interval, data_type):
+    def __init__(self, title, exp_name, interval):
         super().__init__()
 
         self._time_zero = datetime.datetime.now()
@@ -61,7 +55,6 @@ class QtGlobalWorker(QtCore.QObject):
         self._title = title
         self._exp_name = exp_name
         self._interval = interval
-        self.data_type = data_type
 
         # Log sensor data to console
         self._log_to_console = False
@@ -121,7 +114,7 @@ class QtGlobalWorker(QtCore.QObject):
                 self._data_logger.debug(log_text)
 
                 if self._log_to_plotter:
-                    data_plot_queue.put({"id": self._title, "type": self.data_type, "time": elapsed_time_ms, "data": log_data})
+                    data_plot_queue.put({"id": self._title, "time": elapsed_time_ms, "data": log_data})
 
                 if self._log_to_console:
                     self.emit_response('log_data', True, log_text)

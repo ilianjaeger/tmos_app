@@ -10,11 +10,6 @@ data_plot_queue = queue.Queue()
 
 
 class QtLivePlotter(Dock):
-    DATA_TYPES = {
-        'nan': 0,
-        'tmos': 1,
-        'vicon': 2
-    }
 
     TMOS_DATA_BIT_POS = {
         'in_time': {"pos": 1, "title": "Local Time"},
@@ -56,9 +51,6 @@ class QtLivePlotter(Dock):
             # Get all queued points
             while not data_plot_queue.empty():
                 record = data_plot_queue.get(block=False)
-
-                if record["type"] != self.DATA_TYPES['tmos']:
-                    continue
 
                 for graph_id, obj in self.graphs.items():
                     # If plot does not exist, create it

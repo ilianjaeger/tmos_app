@@ -7,7 +7,6 @@ from pyqtgraph.dockarea import *
 
 from lib import QtLogger
 from lib import QtSensor
-from lib import QtVicon
 from lib import QtPlotter
 
 # Initialize logger
@@ -63,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.experiment_name_line = QtWidgets.QLineEdit(self)
         self.experiment_name_line.setText(self.experiment_name)
         self.experiment_name_label = QtWidgets.QLabel(self.config_box)
-        self.experiment_name_label.setText("Experiment name")
+        self.experiment_name_label.setText("Logging name")
 
         # Default output folder
         self.default_output_folder = QtWidgets.QLabel()
@@ -74,8 +73,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Mode (8Hz or 32Hz)
         self.mode_select_8 = QtWidgets.QRadioButton("8 Hz")
-        self.mode_select_8.setChecked(True)
         self.mode_select_32 = QtWidgets.QRadioButton("32 Hz")
+        self.mode_select_32.setChecked(True)
         self.mode_select_label = QtWidgets.QLabel()
         self.mode_select_label.setText("Mode")
 
@@ -96,38 +95,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config_layout.addWidget(self.mode_select_8)
         self.config_layout.addWidget(self.mode_select_32)
 
-        # Vicon instance
-        self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
-
         # Sensors
-        self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, self)
-        self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, self)
-        self.sensor_box_3 = QtSensor.QtSensor("Sensor 3", self.experiment_name, self)
-        self.sensor_box_4 = QtSensor.QtSensor("Sensor 4", self.experiment_name, self)
-
-        # Sensor horizontal layout
-        self.sensor_layout = QtWidgets.QHBoxLayout()
-        self.sensor_layout.addWidget(self.sensor_box_1)
-        self.sensor_layout.addWidget(self.sensor_box_2)
-        self.sensor_layout.addWidget(self.sensor_box_3)
-        self.sensor_layout.addWidget(self.sensor_box_4)
-
-        # Start button
-        self.start_all_button = QtWidgets.QPushButton(self)
-        self.start_all_button.setText('START ALL')
-        self.start_all_button.setEnabled(True)
-        self.start_all_button.clicked.connect(self.start_all_button_clicked)
-
-        # Stop button
-        self.stop_all_button = QtWidgets.QPushButton(self)
-        self.stop_all_button.setText('STOP ALL')
-        self.stop_all_button.setEnabled(True)
-        self.stop_all_button.clicked.connect(self.stop_all_button_clicked)
-
-        # Add to layout
-        start_stop_layout = QtWidgets.QHBoxLayout()
-        start_stop_layout.addWidget(self.start_all_button)
-        start_stop_layout.addWidget(self.stop_all_button)
+        self.sensor_box = QtSensor.QtSensor("Sensor", self.experiment_name, int(self.mode_select_32.isChecked()), self)
 
         # Log Box
         self.log_text_box = QtLogger.QLoggerBox()
@@ -136,9 +105,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
         root_layout.addWidget(self.config_box)
-        root_layout.addWidget(self.vicon_box)
-        root_layout.addLayout(self.sensor_layout)
-        root_layout.addLayout(start_stop_layout)
+        root_layout.addWidget(self.sensor_box)
         root_layout.addWidget(self.log_text_box)
 
         # scroll bar
@@ -148,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scroll.setWidgetResizable(True)
 
         # Main central widget (main content)
-        self.main_central_widget = QtWidgets.QWidget(self.scroll)
+        self.main_central_widget = QtWidgets.QWidget()
         self.main_central_widget.setLayout(root_layout)
         self.scroll.setWidget(self.main_central_widget)
 
@@ -179,7 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(self.main_central_widget.sizeHint())
 
     def set_title(self):
-        self.setWindowTitle("TMOS App - " + self.experiment_name)
+        self.setWindowTitle("TMOS People Counter")
 
     def set_icons(self):
         # Set icon
@@ -197,35 +164,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_instance.setStyleSheet("")
 
         self.log_text_box.adapt_colors_to_mode(style)
-
-    def start_all_button_clicked(self):
-        logging.info("Starting all connected devices")
-
-        t0 = datetime.datetime.now()
-
-        self.sensor_box_1.start_button.click()
-        self.sensor_box_1.set_reference_time(t0)
-
-        self.sensor_box_2.start_button.click()
-        self.sensor_box_2.set_reference_time(t0)
-
-        self.sensor_box_3.start_button.click()
-        self.sensor_box_3.set_reference_time(t0)
-
-        self.sensor_box_4.start_button.click()
-        self.sensor_box_4.set_reference_time(t0)
-
-        self.vicon_box.start_button.click()
-        self.vicon_box.set_reference_time(t0)
-
-    def stop_all_button_clicked(self):
-        logging.info("Stopping all connected devices")
-
-        self.sensor_box_1.stop_button.click()
-        self.sensor_box_2.stop_button.click()
-        self.sensor_box_3.stop_button.click()
-        self.sensor_box_4.stop_button.click()
-        self.vicon_box.stop_button.click()
 
     def save_config(self):
         msg = QtWidgets.QMessageBox()

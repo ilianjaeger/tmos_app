@@ -9,7 +9,7 @@ from lib.template import GlobalInterface
 
 # Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 ################################################
@@ -24,8 +24,8 @@ class SerialInterface(GlobalInterface.GlobalInterface):
     """ Main serial interface
     """
 
-    def __init__(self):
-        super(SerialInterface, self).__init__()
+    def __init__(self, mode):
+        super(SerialInterface, self).__init__(mode)
 
         self._baudraute = 115200
         self._parity = 'N'
@@ -46,7 +46,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             if not self._comm.isOpen():
                 return False
 
-            logger.debug("MCU connected!")
+            logger.debug("MCU connected! mode={}".format(self._mode))
 
             self.stop_device()
 
