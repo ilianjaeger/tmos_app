@@ -9,18 +9,117 @@ from pyqtgraph.dockarea import Dock
 
 data_plot_queue = queue.Queue()
 
+TMOS_DATA_BIT_POS = {
+    'in_time': {"pos": 1, "title": "Local Time"},
+    'dist_raw': {"pos": 2, "title": "Raw Value"},
+    'temp': {"pos": 3, "title": "Temperature"},
+    'dist_filt': {"pos": 4, "title": "Filtered value"},
+    'vel': {"pos": 5, "title": "Velocity"},
+    'bin_1': {"pos": 6, "title": "Presence bit"},
+    'bin_2': {"pos": 7, "title": "Movement bit"}
+}
+
+
+class PeopleCounterPlotItem:
+    def __init__(self, graph_widget, start_x, data_value):
+        self.graph_widget = graph_widget
+
+        self.start_x = start_x
+        self.end_x = start_x
+
+        self.max_data_x = start_x
+        self.max_data_value = data_value
+
+        # Create linear region
+        self.linear_region = pg.LinearRegionItem([start_x, start_x], movable=False)
+        self.arrow_item = None
+        self.text_item = None
+
+        # Add linear region to plot
+        self.graph_widget.addItem(self.linear_region)
+
+    def remove_item(self):
+        # Remove all items
+        self.graph_widget.removeItem(self.linear_region)
+        self.graph_widget.removeItem(self.arrow_item)
+        self.graph_widget.removeItem(self.text_item)
+
+    def update_linear_region(self, pos_x, data_value):
+        self.end_x = pos_x
+        self.linear_region.setRegion([self.start_x, pos_x])
+
+        if data_value > self.max_data_value:
+            self.max_data_value = data_value
+            self.max_data_x = pos_x
+
+    def finalize_reading(self, x_pos, data_value):
+        self.update_linear_region(x_pos, data_value)
+
+        self.arrow_item = pg.ArrowItem(tipAngle=30, baseAngle=-30, headLen=40, tailLen=None, angle=-90, pen=None, brush="y")
+        self.arrow_item.setPos(self.max_data_x, self.max_data_value)
+
+        went_out = self.max_data_x < (self.end_x + self.start_x) / 2
+        print(went_out, self.start_x, self.end_x, self.max_data_x)
+
+        self.text_item = pg.TextItem(
+            html='<span style="color:{};font-size:30px;">{}</span>'.format(("green", "red")[went_out], ("IN", "OUT")[went_out]),
+            anchor=(0.5, 2.0), fill=(0, 0, 255, 0))
+        self.text_item.setPos(self.max_data_x, self.max_data_value)
+
+        self.graph_widget.addItem(self.text_item)
+        self.graph_widget.addItem(self.arrow_item)
+
+    def get_initial_pos(self):
+        return self.start_x
+
+
+class PeopleCounter:
+    def __init__(self, data_graph):
+        self.data_graph = data_graph
+
+        # Array with dicts containing all plot items
+        self.plot_data_items = []
+        self.mov_thresh = 2000
+        self.mov_detected = False
+
+    def update(self, new_data):
+        new_dist_raw = float(new_data['data'].split(',')[TMOS_DATA_BIT_POS["dist_raw"]["pos"]])
+        if new_dist_raw > self.mov_thresh:
+            if not self.mov_detected:
+                self._create_plot_item(new_data["time"], new_dist_raw)
+
+            self.mov_detected = True
+            self._update_current_plot_item(new_data["time"], new_dist_raw)
+
+        else:
+            if self.mov_detected:
+                self._finalize_current_plot_item(new_data["time"], new_dist_raw)
+
+                logging.info("Found new person")
+                self.mov_detected = False
+
+        self._update_plot_items(new_data["id"])
+
+    def _create_plot_item(self, x_pos, data_value):
+        new_plot_item = PeopleCounterPlotItem(self.data_graph["widget"], x_pos, data_value)
+        self.plot_data_items.append(new_plot_item)
+
+    def _update_current_plot_item(self, x_pos, data_value):
+        self.plot_data_items[-1].update_linear_region(x_pos, data_value)
+
+    def _finalize_current_plot_item(self, x_pos, data_value):
+        self.plot_data_items[-1].finalize_reading(x_pos, data_value)
+
+    def _update_plot_items(self, sensor_id):
+        for item in list(self.plot_data_items):
+            if item.get_initial_pos() < self.data_graph["plots"][sensor_id]["x"][0]:
+                item.remove_item()
+                self.plot_data_items.remove(item)
+            else:
+                break
+
 
 class QtLivePlotter(Dock):
-
-    TMOS_DATA_BIT_POS = {
-        'in_time': {"pos": 1, "title": "Local Time"},
-        'dist_raw': {"pos": 2, "title": "Raw Value"},
-        'temp': {"pos": 3, "title": "Temperature"},
-        'dist_filt': {"pos": 4, "title": "Filtered value"},
-        'vel': {"pos": 5, "title": "Velocity"},
-        'bin_1': {"pos": 6, "title": "Presence bit"},
-        'bin_2': {"pos": 7, "title": "Movement bit"}
-    }
 
     NUM_DATA_POINTS = 200
 
@@ -28,31 +127,22 @@ class QtLivePlotter(Dock):
         super(QtLivePlotter, self).__init__(*args, **kwargs)
 
         # Graphs
-        self.graphs = {"dist_raw": dict(), "dist_filt": dict(), "vel": dict(), "temp": dict()}
+        # self.graphs = {"dist_raw": dict(), "dist_filt": dict(), "vel": dict(), "temp": dict()}
+        self.graphs = {"dist_raw": dict()}
         for gr in self.graphs:
-            self.graphs[gr] = dict({"widget": pg.PlotWidget(title=self.TMOS_DATA_BIT_POS[gr]["title"]), "plots": dict()})
+            self.graphs[gr] = dict({"widget": pg.PlotWidget(title=TMOS_DATA_BIT_POS[gr]["title"]), "plots": dict()})
             self.graphs[gr]["widget"].getPlotItem().addLegend()
-            self.graphs[gr]["widget"].getPlotItem().setLabel(axis="left", text=self.TMOS_DATA_BIT_POS[gr]["title"])
+            self.graphs[gr]["widget"].getPlotItem().setLabel(axis="left", text=TMOS_DATA_BIT_POS[gr]["title"])
             self.graphs[gr]["widget"].getPlotItem().setLabel(axis="bottom", text="time")
 
             self.addWidget(self.graphs[gr]["widget"])
 
-        # Current plot number (used for color index)
-        self.current_index = 0
+        self.people_counter = PeopleCounter(self.graphs["dist_raw"])
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(30)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
-
-        self.lr = []
-        self.startTime = 0
-        self.mov_thresh = 2000
-        self.mov_detected = False
-        self.door_movement_array = []
-        self.door_movement_detect_time = []
-        self.door_movement_detect_pos = []
-        self.door_movement_detect_type = []
 
     def update_plot(self):
         global data_plot_queue
@@ -70,7 +160,7 @@ class QtLivePlotter(Dock):
                     self.update_graph(graph_id, self.graphs[graph_id]["plots"][record["id"]], record)
 
                     if graph_id == "dist_raw":
-                        self.update_people_counter(record)
+                        self.people_counter.update(record)
         except queue.Empty:
             pass
 
@@ -83,44 +173,10 @@ class QtLivePlotter(Dock):
                                                                 pen=pg.intColor(len(self.graphs[graph_id]["plots"])),
                                                                 name=plot_name)
 
-    def update_graph(self, graph_id, cur_plot, new_data):
+    @staticmethod
+    def update_graph(graph_id, cur_plot, new_data):
         cur_plot["x"][:-1] = cur_plot["x"][1:]
         cur_plot["x"][-1] = new_data['time']
         cur_plot["y"][:-1] = cur_plot["y"][1:]
-        cur_plot["y"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS[graph_id]["pos"]])
+        cur_plot["y"][-1] = float(new_data['data'].split(',')[TMOS_DATA_BIT_POS[graph_id]["pos"]])
         cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
-
-    def update_people_counter(self, new_data):
-        new_dist_raw = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["dist_raw"]["pos"]])
-        if new_dist_raw > self.mov_thresh:
-            if not self.mov_detected:
-                self.startTime = new_data['time']
-                self.lr.append(pg.LinearRegionItem([self.startTime, self.startTime], movable=False))
-                self.graphs["dist_raw"]["widget"].addItem(self.lr[-1])
-
-            self.mov_detected = True
-            self.door_movement_array.append(new_dist_raw)
-            self.lr[-1].setRegion([self.startTime, new_data['time']])
-
-        else:
-            if self.mov_detected and len(self.door_movement_array) != 0:
-                # Detect type
-                index_of_max = self.door_movement_array.index(max(self.door_movement_array))
-
-                if index_of_max > len(self.door_movement_array) / 2:
-                    self.door_movement_detect_type.append("in")
-                else:
-                    self.door_movement_detect_type.append("out")
-
-                logging.info("Found new person")
-                self.door_movement_array = []
-                self.door_movement_detect_time.append(new_data['time'])
-                self.door_movement_detect_pos.append(new_dist_raw)
-                self.mov_detected = False
-
-        for item in list(self.lr):
-            if item.getRegion()[0] < self.graphs["dist_raw"]["plots"][new_data["id"]]["x"][0]:
-                self.graphs["dist_raw"]["widget"].removeItem(item)
-                self.lr.remove(item)
-            else:
-                break
