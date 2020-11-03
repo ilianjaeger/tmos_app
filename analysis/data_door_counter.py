@@ -27,7 +27,6 @@ tmos_data = pd.read_csv("../output/door/1_DOOR_TILT_EXTREME.log", names=tmos_col
 # Get time value in seconds
 tmos_data.index = tmos_data.index / 1000
 
-# Temperature compansation
 tmos_data.dist_raw = compensate_temp(tmos_data.dist_raw, tmos_data.temp, 23.0, -1426.57019003)
 
 # Moving average
@@ -80,7 +79,8 @@ for ind, val in enumerate(door_movement_detect_type):
 
 combined_ax[0].set_ylabel("Sensor value 1 and 2")
 combined_ax[0].grid(True)
-combined_ax[0].legend()
+combined_ax[0].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+           ncol=2, mode="expand", borderaxespad=0.)
 
 combined_ax[1].plot(tmos_data.index, tmos_data.vel)
 combined_ax[1].set_ylabel("Velocity")

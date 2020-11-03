@@ -127,7 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_dock.addWidget(self.scroll)
 
         # Dock for the plotter
-        self.plotter_dock = QtPlotter.QtLivePlotter("Data plots")
+        self.plotter_dock = QtPlotter.QtLivePlotter("Data plots", self)
 
         # Add docks to dock area
         self.dock_area.addDock(self.plotter_dock)

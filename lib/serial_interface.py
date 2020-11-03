@@ -9,7 +9,7 @@ from lib.template import GlobalInterface
 
 # Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 ################################################
