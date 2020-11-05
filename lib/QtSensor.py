@@ -32,7 +32,6 @@ class QtSensor(QtWidgets.QGroupBox):
 
         # The available serial ports
         self.com_port_list = QtWidgets.QComboBox()
-        self.com_port_list.addItems(serial_interface.list_available_ports())
         self.com_port_list.currentIndexChanged.connect(self.port_selection_change)
 
         ''' CONNECT AND DISCONNECT BUTTONS '''
@@ -140,6 +139,13 @@ class QtSensor(QtWidgets.QGroupBox):
 
     def set_reference_time(self, t0):
         self.serial_worker.set_reference_time(t0)
+
+    def update_com_port_list(self, ports):
+        if self.is_connected():
+            return
+
+        self.com_port_list.clear()
+        self.com_port_list.addItems(ports)
 
     def send_command(self, comm_id, comm_arg=''):
         self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND[comm_id], comm_arg)

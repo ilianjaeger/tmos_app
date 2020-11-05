@@ -113,8 +113,8 @@ class QtGlobalWorker(QtCore.QObject):
         data = self._interface.process_data()
 
         if data == -1:
-            self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
             self.stop_read()
+            self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
         elif type(data) == str and data != '':
 
             for log_data in filter(None, data.split('\t')):

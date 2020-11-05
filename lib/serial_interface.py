@@ -97,7 +97,8 @@ class SerialInterface(GlobalInterface.GlobalInterface):
 
         try:
             logger.debug("Stopping and resetting device")
-            self.stop_device()
+            if not self.stop_device():
+                return False
 
             logger.debug("Connecting")
             # Send CONNECTED command and wait for ACK

@@ -9,6 +9,7 @@ from lib import QtLogger
 from lib import QtSensor
 from lib import QtVicon
 from lib import QtPlotter
+from lib.serial_interface import list_available_ports
 
 # Initialize logger
 logging.getLogger().setLevel(logging.INFO)
@@ -118,6 +119,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.start_all_button.setEnabled(True)
         self.start_all_button.clicked.connect(self.start_all_button_clicked)
 
+        # Refresh COM ports button
+        self.refresh_com_button = QtWidgets.QPushButton(self)
+        self.refresh_com_button.setText('Refresh COM Ports')
+        self.refresh_com_button.setEnabled(True)
+        self.refresh_com_button.clicked.connect(self.update_com_ports)
+
         # Stop button
         self.stop_all_button = QtWidgets.QPushButton(self)
         self.stop_all_button.setText('STOP ALL')
@@ -127,6 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Add to layout
         start_stop_layout = QtWidgets.QHBoxLayout()
         start_stop_layout.addWidget(self.start_all_button)
+        start_stop_layout.addWidget(self.refresh_com_button)
         start_stop_layout.addWidget(self.stop_all_button)
 
         # Log Box
@@ -173,6 +181,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set dark theme as default
         self.change_style('dark')
+
+        # Update COM ports after initialization
+        self.update_com_ports()
+
+    def update_com_ports(self):
+        available_ports = list_available_ports()
+        self.sensor_box_1.update_com_port_list(available_ports)
+        self.sensor_box_2.update_com_port_list(available_ports)
+        self.sensor_box_3.update_com_port_list(available_ports)
+        self.sensor_box_4.update_com_port_list(available_ports)
 
     def adjust_widget_size(self):
         self.main_central_widget.adjustSize()
