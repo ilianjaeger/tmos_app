@@ -1,3 +1,5 @@
+import datetime
+
 class GlobalInterface:
     """ Global Interface
     """
@@ -5,8 +7,10 @@ class GlobalInterface:
     def __init__(self):
         self._comm = None
         self._port = None
-        self._timeout = 0.5
+        self._timeout = 0.005
         self._mode = 0  # Start with 8Hz
+
+        self._time_zero = datetime.datetime.now()
 
     def get_port(self):
         return self._port
@@ -36,6 +40,9 @@ class GlobalInterface:
 
     def set_port(self, port):
         self._port = port
+
+    def set_reference_time(self, t0):
+        self._time_zero = t0
 
     def is_connected(self):
         pass

@@ -104,7 +104,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             self._comm.write(b'CONNECT\r\n')
 
             # Sometimes it takes up to 3 seconds... :(
-            if not (self.wait_for_text_timeout("CONNECTED ", 3.0) and self.wait_for_text_timeout(">", 3.0)):
+            if not (self.wait_for_text_timeout("CONNECTED ", 3000) and self.wait_for_text_timeout(">", 3000)):
                 logger.error("Could not connect to board")
                 return False
 
@@ -112,7 +112,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             logger.debug("Start sensor reading [MODE " + str(self._mode) + " - " + ("SLOW", "FAST")[self._mode] + "]")
             self._comm.write(bytes("START {}\r\n".format(self._mode), 'utf8'))
 
-            if not self.wait_for_text_timeout("Start Measurements", 0.6):
+            if not self.wait_for_text_timeout("Start Measurements", 600):
                 logger.error("Could not start reading")
                 return False
 
@@ -154,23 +154,26 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         if not self.is_connected():
             return -1
 
+        log_text = ''
         try:
             recv = self.read_text()
-            if recv == '':
-                return ''
+            while recv != '':
 
-            list_data = recv.split('\t')  # Data separated by tabs
-            n = len(list_data)  # Number of elements
+                list_data = recv.split('\t')  # Data separated by tabs
+                n = len(list_data)  # Number of elements
 
-            # We always receive 10 data elements
-            if n != 10:
-                logger.error("Wrong data received! Skipping [{}]".format(recv))
-                return ''
+                # We always receive 10 data elements
+                if n != 10:
+                    logger.debug("Wrong data received! Skipping [{}]".format(recv))
+                    return ''
 
-            list_data = list_data[1:n - 1]  # First and last elements are garbage
-            log_text = ','.join(map(str, list_data)) + '\t'
+                # list_data = list_data[1:n - 1]  # First and last elements are garbage
+                list_data = list_data[0:n - 1]
+                list_data[0] = str(int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000))
 
-            logger.debug(log_text)
+                log_text = log_text + ','.join(map(str, list_data)) + '\t'
+
+                recv = self.read_text()
 
         except serial.SerialException:
             self._comm = None
@@ -196,12 +199,12 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             self.emit_error_signal()
             return ''
         except UnicodeDecodeError:
-            logger.error("Can't decode text")
+            logger.debug("Can't decode text")
             return ''
 
         return read_string
 
-    def wait_for_text_timeout(self, txt, timeout_s):
+    def wait_for_text_timeout(self, txt, timeout_ms):
         """ Wait for a specific text/pattern. Timeout given in seconds
 
             :returns:
@@ -209,12 +212,12 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         """
 
         t0 = datetime.datetime.now()
-        timeout_us = timeout_s * 1000000
 
-        while (datetime.datetime.now() - t0).microseconds < timeout_us:
+        while int((datetime.datetime.now() - t0).total_seconds() * 1000) < timeout_ms:
             if self.read_text() == txt:
                 return True
 
+        logger.error("Did not receive '{}'".format(txt))
         return False
 
 

@@ -108,23 +108,24 @@ class QtGlobalWorker(QtCore.QObject):
 
     @pyqtSlot()
     def read_data(self):
+        # start_time = datetime.datetime.now()
+
         data = self._interface.process_data()
 
         if data == -1:
             self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
             self.stop_read()
         elif type(data) == str and data != '':
-            elapsed_time_ms = int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000)
 
             for log_data in filter(None, data.split('\t')):
-                log_text = "{},{}".format(elapsed_time_ms, log_data)
-                self._data_logger.debug(log_text)
+                self._data_logger.debug(log_data)
 
                 if self._log_to_plotter:
-                    data_plot_queue.put({"id": self._title, "type": self.data_type, "time": elapsed_time_ms, "data": log_data})
+                    data_plot_queue.put(
+                        {"id": self._title, "type": self.data_type, "data": log_data})
 
-                if self._log_to_console:
-                    self.emit_response('log_data', True, log_text)
+            if self._log_to_console:
+                self.emit_response('log_data', True, data)
 
     def connect(self, port):
         self.emit_response('connected', self._interface.open_port(port), "")
@@ -170,6 +171,7 @@ class QtGlobalWorker(QtCore.QObject):
 
     def set_reference_time(self, t0):
         self._time_zero = t0
+        self._interface.set_reference_time(t0)
 
     def change_log_to_console(self, activate):
         self._log_to_console = activate == 'True'

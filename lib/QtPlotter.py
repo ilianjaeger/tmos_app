@@ -17,22 +17,25 @@ class QtLivePlotter(Dock):
     }
 
     TMOS_DATA_BIT_POS = {
-        'in_time': {"pos": 1, "title": "Local Time"},
-        'dist_raw': {"pos": 2, "title": "Raw Value"},
-        'temp': {"pos": 3, "title": "Temperature"},
-        'dist_filt': {"pos": 4, "title": "Filtered value"},
-        'vel': {"pos": 5, "title": "Velocity"},
-        'bin_1': {"pos": 6, "title": "Presence bit"},
-        'bin_2': {"pos": 7, "title": "Movement bit"}
+        'time': {"pos": 0, "title": "PC time"},
+        'dev_id': {"pos": 1, "title": "Device ID"},
+        'in_time': {"pos": 2, "title": "Local Time"},
+        'dist_raw': {"pos": 3, "title": "Raw Value"},
+        'temp': {"pos": 4, "title": "Temperature"},
+        'dist_filt': {"pos": 5, "title": "Filtered value"},
+        'vel': {"pos": 6, "title": "Velocity"},
+        'bin_1': {"pos": 7, "title": "Presence bit"},
+        'bin_2': {"pos": 8, "title": "Movement bit"}
     }
 
-    NUM_DATA_POINTS = 200
+    NUM_DATA_POINTS = 100
 
     def __init__(self, *args, **kwargs):
         super(QtLivePlotter, self).__init__(*args, **kwargs)
 
         # Graphs
-        self.graphs = {"dist_raw": dict(), "dist_filt": dict(), "vel": dict(), "temp": dict()}
+        # self.graphs = {"dist_raw": dict(), "dist_filt": dict(), "vel": dict(), "temp": dict()}
+        self.graphs = {"dist_raw": dict()}
         for gr in self.graphs:
             self.graphs[gr] = dict({"widget": pg.PlotWidget(title=self.TMOS_DATA_BIT_POS[gr]["title"]), "plots": dict()})
             self.graphs[gr]["widget"].getPlotItem().addLegend()
@@ -45,7 +48,7 @@ class QtLivePlotter(Dock):
         self.current_index = 0
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(30)
+        self.timer.setInterval(15)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
@@ -80,7 +83,7 @@ class QtLivePlotter(Dock):
 
     def update_graph(self, graph_id, cur_plot, new_data):
         cur_plot["x"][:-1] = cur_plot["x"][1:]
-        cur_plot["x"][-1] = new_data['time']
+        cur_plot["x"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["time"]["pos"]])  # float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["in_time"]["pos"]])
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS[graph_id]["pos"]])
         cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])

@@ -1,5 +1,6 @@
 import logging
 import socket
+import datetime
 
 from lib.template import GlobalInterface
 from vicon_dssdk import ViconDataStream
@@ -137,12 +138,11 @@ class ViconInterface(GlobalInterface.GlobalInterface):
                 names = self._comm.GetSubjectNames()
                 log_text = ''
                 for i in names:
-                    # print('obj', i)
                     segment_names = self._comm.GetSegmentNames(i)
+                    elapsed_time_ms = str(int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000))
                     for s in segment_names:
-                        # print('segment', s)
                         pos = self._comm.GetSegmentGlobalTranslation(i, s)
-                        log_text = log_text + "{},{:.2f},{:.2f},{:.2f}\t".format(s, pos[0][0], pos[0][1], pos[0][2])
+                        log_text = log_text + "{},{},{:.2f},{:.2f},{:.2f}\t".format(elapsed_time_ms, s, pos[0][0], pos[0][1], pos[0][2])
 
                 return log_text
         except ViconDataStream.DataStreamException as e:
