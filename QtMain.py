@@ -236,6 +236,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vicon_box.start_button.click()
         self.vicon_box.set_reference_time(t0)
 
+        self.plotter_dock.reset_graphs()
+
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")
 

@@ -87,3 +87,11 @@ class QtLivePlotter(Dock):
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS[graph_id]["pos"]])
         cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
+
+    def reset_graphs(self):
+        for _, obj in self.graphs.items():
+            # If plot does not exist, create it
+            for _, sensor_plot in obj["plots"].items():
+                sensor_plot["x"] = np.array(self.NUM_DATA_POINTS * [0])
+                sensor_plot["y"] = np.array(self.NUM_DATA_POINTS * [0])
+                sensor_plot["line"].setData(sensor_plot["x"], sensor_plot["y"])
