@@ -1,14 +1,15 @@
 import datetime
 
+
 class GlobalInterface:
     """ Global Interface
     """
 
-    def __init__(self):
+    def __init__(self, mode=0):
         self._comm = None
         self._port = None
         self._timeout = 0.005
-        self._mode = 0  # Start with 8Hz
+        self._mode = mode
 
         self._time_zero = datetime.datetime.now()
 

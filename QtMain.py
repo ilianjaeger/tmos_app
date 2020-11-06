@@ -75,8 +75,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Mode (8Hz or 32Hz)
         self.mode_select_8 = QtWidgets.QRadioButton("8 Hz")
-        self.mode_select_8.setChecked(True)
         self.mode_select_32 = QtWidgets.QRadioButton("32 Hz")
+        self.mode_select_32.setChecked(True)
         self.mode_select_label = QtWidgets.QLabel()
         self.mode_select_label.setText("Mode")
 
@@ -101,10 +101,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
 
         # Sensors
-        self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, self)
-        self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, self)
-        self.sensor_box_3 = QtSensor.QtSensor("Sensor 3", self.experiment_name, self)
-        self.sensor_box_4 = QtSensor.QtSensor("Sensor 4", self.experiment_name, self)
+        self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, int(self.mode_select_32.isChecked()), self)
+        self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, int(self.mode_select_32.isChecked()), self)
+        self.sensor_box_3 = QtSensor.QtSensor("Sensor 3", self.experiment_name, int(self.mode_select_32.isChecked()), self)
+        self.sensor_box_4 = QtSensor.QtSensor("Sensor 4", self.experiment_name, int(self.mode_select_32.isChecked()), self)
 
         # Sensor horizontal layout
         self.sensor_layout = QtWidgets.QHBoxLayout()

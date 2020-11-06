@@ -108,8 +108,6 @@ class QtGlobalWorker(QtCore.QObject):
 
     @pyqtSlot()
     def read_data(self):
-        # start_time = datetime.datetime.now()
-
         data = self._interface.process_data()
 
         if data == -1:

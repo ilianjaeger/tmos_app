@@ -48,7 +48,7 @@ class QtLivePlotter(Dock):
         self.current_index = 0
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(15)
+        self.timer.setInterval(60)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 

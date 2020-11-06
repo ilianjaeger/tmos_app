@@ -24,12 +24,13 @@ class SerialInterface(GlobalInterface.GlobalInterface):
     """ Main serial interface
     """
 
-    def __init__(self):
-        super(SerialInterface, self).__init__()
+    def __init__(self, mode=0):
+        super(SerialInterface, self).__init__(mode)
 
         self._baudraute = 115200
         self._parity = 'N'
         self._stop_bits = 1
+
 
     def open_port(self, port):
         """ Opens a port

@@ -10,7 +10,7 @@ from lib.template.GlobalThread import QtGlobalWorker
 
 
 class QtSensor(QtWidgets.QGroupBox):
-    def __init__(self, title, exp_name, parent=None):
+    def __init__(self, title, exp_name, mode=0, parent=None):
         super(QtSensor, self).__init__(parent)
 
         self.time_zero = datetime.datetime.now()
@@ -84,7 +84,7 @@ class QtSensor(QtWidgets.QGroupBox):
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
-        self.serial_worker = QtSerialWorker(title, exp_name, 30)
+        self.serial_worker = QtSerialWorker(title, exp_name, mode)
 
         # Thread
         self.serial_thread = QtCore.QThread(self)
