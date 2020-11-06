@@ -5,6 +5,15 @@ import pickle
 import os.path
 
 
+# Values calculated using
+SENSOR_TEMP_COEFFICIENTS = {
+    'tmos1': -1418.7257164734388,
+    'tmos2': -1683.3074735718135,
+    'tmos3': -1725.307234379036,
+    'tmos4': -1522.4062980808264
+}
+
+
 def vicon_euclidean_distance(df1, df2=None, cols=None):
     if cols is None:
         cols = ['pos_x', 'pos_y']
