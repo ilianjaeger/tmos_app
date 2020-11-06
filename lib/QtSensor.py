@@ -85,7 +85,7 @@ class QtSensor(QtWidgets.QGroupBox):
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
-        self.serial_worker = QtSerialWorker(title, exp_name, 10, mode)
+        self.serial_worker = QtSerialWorker(title, exp_name, mode)
 
         # Thread
         self.serial_thread = QtCore.QThread(self)

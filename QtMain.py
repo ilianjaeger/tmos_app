@@ -183,19 +183,11 @@ class MainWindow(QtWidgets.QMainWindow):
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
             self.set_title()
-            self.sensor_box_1.change_file_handler(self.experiment_name)
-            self.sensor_box_2.change_file_handler(self.experiment_name)
-            self.sensor_box_3.change_file_handler(self.experiment_name)
-            self.sensor_box_4.change_file_handler(self.experiment_name)
-            self.vicon_box.change_file_handler(self.experiment_name)
+            self.sensor_box.change_file_handler(self.experiment_name)
 
             # Change operation mode
             op_mode = int(self.mode_select_32.isChecked())
-            self.sensor_box_1.change_mode(op_mode)
-            self.sensor_box_2.change_mode(op_mode)
-            self.sensor_box_3.change_mode(op_mode)
-            self.sensor_box_4.change_mode(op_mode)
-            self.vicon_box.change_mode(op_mode)
+            self.sensor_box.change_mode(op_mode)
 
             logging.info("Configuration successfully saved!")
 

@@ -55,15 +55,10 @@ class PeopleCounterPlotItem:
         self._send_command('remove', self.arrow_item)
         self._send_command('remove', self.text_item)
 
-        # self.graph_widget.removeItem(self.linear_region)
-        # self.graph_widget.removeItem(self.arrow_item)
-        # self.graph_widget.removeItem(self.text_item)
-
     def update_linear_region(self, pos_x, data_value):
         self.end_x = pos_x
 
         self._send_command("region", self.linear_region, self.start_x, pos_x)
-        # self.linear_region.setRegion([self.start_x, pos_x])
 
         if data_value > self.max_data_value:
             self.max_data_value = data_value
@@ -124,7 +119,8 @@ class PeopleCounter:
         self._update_plot_items()
 
     def _create_plot_item(self):
-        new_plot_item = PeopleCounterPlotItem(self.data_graph["widget"], self.command_signal, self.data_graph["plot"]["x"][-1],
+        new_plot_item = PeopleCounterPlotItem(self.data_graph["widget"], self.command_signal,
+                                              self.data_graph["plot"]["x"][-1],
                                               self.data_graph["plot"]["y"][-1])
         self.plot_data_items.append(new_plot_item)
 
@@ -132,7 +128,8 @@ class PeopleCounter:
         if len(self.plot_data_items) == 0:
             return
 
-        self.plot_data_items[-1].update_linear_region(self.data_graph["plot"]["x"][-1], self.data_graph["plot"]["y"][-1])
+        self.plot_data_items[-1].update_linear_region(self.data_graph["plot"]["x"][-1],
+                                                      self.data_graph["plot"]["y"][-1])
 
     def _finalize_current_plot_item(self):
         self.plot_data_items[-1].finalize_reading(self.data_graph["plot"]["x"][-1], self.data_graph["plot"]["y"][-1])
@@ -190,8 +187,8 @@ class QtLivePlotterWorker(QtCore.QObject):
         cur_plot["y"] = np.array(self.NUM_DATA_POINTS * [0])
         cur_plot["origin"] = 0.0
 
-        # self.command_signal.emit(WIDGET_COMMAND_TYPES['create'], None, 0, 0)
-        cur_plot["line"] = self.graphs[graph_id]["widget"].plot(cur_plot["x"], cur_plot["y"], name="TMOS Sensor")
+        self.command_signal.emit(WIDGET_COMMAND_TYPES['create'], self.graphs[graph_id], 0, 0)
+        # cur_plot["line"] = self.graphs[graph_id]["widget"].plot(cur_plot["x"], cur_plot["y"], name="TMOS Sensor")
 
     def update_graph(self, graph_id, new_data):
         cur_plot = self.graphs[graph_id]["plot"]
@@ -200,8 +197,8 @@ class QtLivePlotterWorker(QtCore.QObject):
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[TMOS_DATA_BIT_POS[graph_id]["pos"]]) - cur_plot["origin"]
 
-        # self.command_signal.emit(WIDGET_COMMAND_TYPES['update'], None, 0, 0)
-        cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
+        self.command_signal.emit(WIDGET_COMMAND_TYPES['update'], self.graphs[graph_id]["plot"], 0, 0)
+        # cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
 
 
 class QtLivePlotter(Dock):
@@ -249,12 +246,11 @@ class QtLivePlotter(Dock):
             widget["widget"].removeItem(vobj)
         elif command == WIDGET_COMMAND_TYPES['region']:
             vobj.setRegion([vmin, vmax])
-        # elif command == WIDGET_COMMAND_TYPES['create']:
-        #     widget["plot"]["line"] = widget["widget"].plot(widget["plot"]["x"], widget["plot"]["y"],
-        #                                                    pen="red",
-        #                                                    name="TMOS Sensor")
-        # elif command == WIDGET_COMMAND_TYPES['update']:
-        #     widget["plot"]["line"].setData(widget["plot"]["x"], widget["plot"]["y"])
+        elif command == WIDGET_COMMAND_TYPES['create']:
+            vobj["plot"]["line"] = vobj["widget"].plot(vobj["plot"]["x"], vobj["plot"]["y"], name="TMOS Sensor")
+        elif command == WIDGET_COMMAND_TYPES['update']:
+            if 'line' in vobj:
+                vobj["line"].setData(vobj["x"], vobj["y"])
 
     @pyqtSlot()
     def set_origin(self):
@@ -263,5 +259,7 @@ class QtLivePlotter(Dock):
         if self.graphs["dist_raw"]["plot"] is None:
             return
 
-        self.graphs["dist_raw"]["plot"]["origin"] = self.graphs["dist_raw"]["plot"]["y"][-1] + self.graphs["dist_raw"]["plot"]["origin"]
-        self.graphs["dist_raw"]["plot"]["y"] = self.graphs["dist_raw"]["plot"]["y"] - self.graphs["dist_raw"]["plot"]["y"][-1]
+        self.graphs["dist_raw"]["plot"]["origin"] = self.graphs["dist_raw"]["plot"]["y"][-1] + \
+                                                    self.graphs["dist_raw"]["plot"]["origin"]
+        self.graphs["dist_raw"]["plot"]["y"] = self.graphs["dist_raw"]["plot"]["y"] - \
+                                               self.graphs["dist_raw"]["plot"]["y"][-1]
