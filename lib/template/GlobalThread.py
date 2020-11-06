@@ -4,8 +4,6 @@ import datetime
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 
-from lib.QtPlotter import data_plot_queue
-
 
 ################################################
 # BASE THREAD WORKER FOR SENSORS               #
@@ -68,6 +66,7 @@ class QtGlobalWorker(QtCore.QObject):
 
         # Log to data plotter
         self._log_to_plotter = True
+        self._logger_process = None
 
         # Global interface
         self._interface = None
@@ -114,13 +113,11 @@ class QtGlobalWorker(QtCore.QObject):
             self.stop_read()
             self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
         elif type(data) == str and data != '':
-
             for log_data in filter(None, data.split('\t')):
                 self._data_logger.debug(log_data)
 
-                if self._log_to_plotter:
-                    data_plot_queue.put(
-                        {"id": self._title, "type": self.data_type, "data": log_data})
+                if self._log_to_plotter and self._logger_process is not None:
+                    self.write_to_plotter_process("{}\t{}\t{}\n".format(self._title, self.data_type, log_data))
 
             if self._log_to_console:
                 self.emit_response('log_data', True, data)
@@ -174,6 +171,9 @@ class QtGlobalWorker(QtCore.QObject):
     def change_log_to_console(self, activate):
         self._log_to_console = activate == 'True'
 
+    def set_logger_process(self, p):
+        self._logger_process = p
+
     def get_interval(self):
         return self._interval
 
@@ -191,6 +191,15 @@ class QtGlobalWorker(QtCore.QObject):
 
     def get_instance(self):
         return self._interface
+
+    def write_to_plotter_process(self, text):
+        try:
+            self._logger_process.stdin.write(text)
+            self._logger_process.stdin.flush()
+        except OSError:
+            self._logger_process = None
+            self._log_to_plotter = False
+            self.emit_response('log_data', True, "Plotter pipe is broken")
 
     @staticmethod
     def get_log_filename(name, title):

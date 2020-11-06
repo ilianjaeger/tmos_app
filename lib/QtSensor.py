@@ -4,7 +4,6 @@ import datetime
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
 
-from lib import serial_interface
 from lib.QtSerialThread import QtSerialWorker
 from lib.template.GlobalThread import QtGlobalWorker
 
@@ -146,6 +145,9 @@ class QtSensor(QtWidgets.QGroupBox):
 
         self.com_port_list.clear()
         self.com_port_list.addItems(ports)
+
+    def set_logger_process(self, p):
+        self.serial_worker.set_logger_process(p)
 
     def send_command(self, comm_id, comm_arg=''):
         self.serial_worker.get_worker_command_signal().emit(QtGlobalWorker.WORKER_COMMAND[comm_id], comm_arg)

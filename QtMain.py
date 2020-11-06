@@ -1,6 +1,8 @@
 import sys
+import struct
 import logging
 import datetime
+import subprocess
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from pyqtgraph.dockarea import *
@@ -8,7 +10,6 @@ from pyqtgraph.dockarea import *
 from lib import QtLogger
 from lib import QtSensor
 from lib import QtVicon
-from lib import QtPlotter
 from lib.serial_interface import list_available_ports
 
 # Initialize logger
@@ -167,14 +168,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_dock = Dock("Main configuration")
         self.main_dock.addWidget(self.scroll)
 
-        # Dock for the plotter
-        self.plotter_dock = QtPlotter.QtLivePlotter("Data plots")
-
         # Add docks to dock area
-        self.dock_area.addDock(self.plotter_dock)
         self.dock_area.addDock(self.main_dock)
-
-        self.dock_area.moveDock(self.main_dock, 'above', self.plotter_dock)
 
         # Set dock area as main window central widget
         self.setCentralWidget(self.dock_area)
@@ -184,6 +179,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Update COM ports after initialization
         self.update_com_ports()
+
+        self.log_process = subprocess.Popen("python QtPlotter.py", stdin=subprocess.PIPE, stdout=None, encoding='utf-8')
+        self.sensor_box_1.set_logger_process(self.log_process)
+        self.sensor_box_2.set_logger_process(self.log_process)
+        self.sensor_box_3.set_logger_process(self.log_process)
+        self.sensor_box_4.set_logger_process(self.log_process)
 
     def update_com_ports(self):
         available_ports = list_available_ports()
@@ -235,8 +236,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.vicon_box.start_button.click()
         self.vicon_box.set_reference_time(t0)
-
-        self.plotter_dock.reset_graphs()
 
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")

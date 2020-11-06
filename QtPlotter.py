@@ -1,15 +1,29 @@
+import sys
 import queue
 import numpy as np
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import pyqtSlot
 
 import pyqtgraph as pg
-from pyqtgraph.dockarea import Dock
-
-data_plot_queue = queue.Queue()
 
 
-class QtLivePlotter(Dock):
+class QThread1(QtCore.QThread):
+    def __init__(self, data_queue, parent=None):
+        QtCore.QThread.__init__(self, parent)
+
+        self.data_queue = data_queue
+
+    def run(self):
+        while True:
+            line = sys.stdin.readline()
+
+            data = line.split('\t')
+            if len(data) > 2:
+                self.data_queue.put(dict({"id": data[0], "type": data[1], "data": data[2]}))
+
+
+class QtLivePlotter(QtWidgets.QMainWindow):
     DATA_TYPES = {
         'nan': 0,
         'tmos': 1,
@@ -30,8 +44,19 @@ class QtLivePlotter(Dock):
 
     NUM_DATA_POINTS = 100
 
+    data_plot_queue = queue.Queue()
+
     def __init__(self, *args, **kwargs):
         super(QtLivePlotter, self).__init__(*args, **kwargs)
+
+        self.setWindowTitle("TMOS Logger")
+
+        self.main_widget = QtWidgets.QWidget()
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.label = QtWidgets.QLabel()
+        self.label.setText(sys.stdin.encoding)
+        self.main_layout.addWidget(self.label)
 
         # Graphs
         # self.graphs = {"dist_raw": dict(), "dist_filt": dict(), "vel": dict(), "temp": dict()}
@@ -42,26 +67,29 @@ class QtLivePlotter(Dock):
             self.graphs[gr]["widget"].getPlotItem().setLabel(axis="left", text=self.TMOS_DATA_BIT_POS[gr]["title"])
             self.graphs[gr]["widget"].getPlotItem().setLabel(axis="bottom", text="time")
 
-            self.addWidget(self.graphs[gr]["widget"])
+            self.main_layout.addWidget(self.graphs[gr]["widget"])
 
-        # Current plot number (used for color index)
-        self.current_index = 0
+        self.main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.main_widget)
+
+        self.read_thread = QThread1(self.data_plot_queue)
+        self.read_thread.start()
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(60)
+        self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_plot)
         self.timer.start()
 
+    @pyqtSlot()
     def update_plot(self):
-        global data_plot_queue
-
         try:
             # Get all queued points
-            while not data_plot_queue.empty():
-                record = data_plot_queue.get(block=False)
-
-                if record["type"] != self.DATA_TYPES['tmos']:
-                    continue
+            while not self.data_plot_queue.empty():
+                record = self.data_plot_queue.get(block=False)
+                # self.label.setText(record)
+                # continue
+                # if record["type"] != self.DATA_TYPES['tmos']:
+                #     continue
 
                 for graph_id, obj in self.graphs.items():
                     # If plot does not exist, create it
@@ -83,7 +111,7 @@ class QtLivePlotter(Dock):
 
     def update_graph(self, graph_id, cur_plot, new_data):
         cur_plot["x"][:-1] = cur_plot["x"][1:]
-        cur_plot["x"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["time"]["pos"]])  # float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["in_time"]["pos"]])
+        cur_plot["x"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS["time"]["pos"]])
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[self.TMOS_DATA_BIT_POS[graph_id]["pos"]])
         cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
@@ -95,3 +123,19 @@ class QtLivePlotter(Dock):
                 sensor_plot["x"] = np.array(self.NUM_DATA_POINTS * [0])
                 sensor_plot["y"] = np.array(self.NUM_DATA_POINTS * [0])
                 sensor_plot["line"].setData(sensor_plot["x"], sensor_plot["y"])
+
+
+if __name__ == '__main__':
+    # sys.stdin = open("output/ALL_TEMP_SENSOR_1.log")
+
+    # Main application
+    app = QtWidgets.QApplication(sys.argv)
+    QtCore.QThread.currentThread().setObjectName('main')
+
+    # Main window
+    main_window = QtLivePlotter()
+
+    # Show windows
+    main_window.show()
+
+    app.exec_()
