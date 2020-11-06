@@ -42,12 +42,16 @@ def get_data_from_file(filename, norm_time=True):
     tmos_col_names = ["col_2", "in_time", "dist_raw", "temp", "dist_raw_filt", "vel", "bin_1", "bin_2"]
     if os.path.isfile(filename + "_SENSOR_1.log"):
         final_data["tmos1"] = pd.read_csv(filename + "_SENSOR_1.log", names=tmos_col_names, index_col=0)
+        final_data["tmos1"] = final_data["tmos1"][~final_data["tmos1"].index.duplicated(keep='first')]
     if os.path.isfile(filename + "_SENSOR_2.log"):
         final_data["tmos2"] = pd.read_csv(filename + "_SENSOR_2.log", names=tmos_col_names, index_col=0)
+        final_data["tmos2"] = final_data["tmos2"][~final_data["tmos2"].index.duplicated(keep='first')]
     if os.path.isfile(filename + "_SENSOR_3.log"):
         final_data["tmos3"] = pd.read_csv(filename + "_SENSOR_3.log", names=tmos_col_names, index_col=0)
+        final_data["tmos3"] = final_data["tmos3"][~final_data["tmos3"].index.duplicated(keep='first')]
     if os.path.isfile(filename + "_SENSOR_4.log"):
         final_data["tmos4"] = pd.read_csv(filename + "_SENSOR_4.log", names=tmos_col_names, index_col=0)
+        final_data["tmos4"] = final_data["tmos4"][~final_data["tmos4"].index.duplicated(keep='first')]
 
     # Vicon
     vicon_col_names = ["obj", "pos_x", "pos_y", "pos_z"]
@@ -72,6 +76,7 @@ def get_data_from_file(filename, norm_time=True):
         ''' GET TRUE DISTANCE '''
         final_data["vicon"] = pd.DataFrame(data=vicon_euclidean_distance(vicon_person_data, vicon_tmos_pos),
                                                   index=vicon_person_data.index, columns=['dist_true'])
+        final_data["vicon"].index.drop_duplicates(keep='first')
 
     if norm_time:
         for i in final_data:
