@@ -178,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logging.warning("Not saving configuration!")
         else:
             # Stop all device before making any changes
-            self.stop_all_button_clicked()
+            self.sensor_box.stop_button.click()
 
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
