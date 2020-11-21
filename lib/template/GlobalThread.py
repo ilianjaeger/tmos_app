@@ -65,7 +65,7 @@ class QtGlobalWorker(QtCore.QObject):
         self._log_to_console = False
 
         # Log to data plotter
-        self._log_to_plotter = True
+        self._log_to_plotter = False
         self._logger_process = None
 
         # Global interface
@@ -173,6 +173,7 @@ class QtGlobalWorker(QtCore.QObject):
 
     def set_logger_process(self, p):
         self._logger_process = p
+        self._log_to_plotter = True
 
     def get_interval(self):
         return self._interval
