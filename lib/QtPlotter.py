@@ -98,7 +98,7 @@ class PeopleCounter:
 
         # Array with dicts containing all plot items
         self.plot_data_items = []
-        self.mov_thresh = 1000
+        self.mov_thresh = 250
         self.mov_detected = False
 
     def update(self):
@@ -186,6 +186,8 @@ class QtLivePlotterWorker(QtCore.QObject):
         cur_plot["x"] = np.array(self.NUM_DATA_POINTS * [0])
         cur_plot["y"] = np.array(self.NUM_DATA_POINTS * [0])
         cur_plot["origin"] = 0.0
+        cur_plot["miny"] = 0.0
+        cur_plot["maxy"] = 0.0
 
         self.command_signal.emit(WIDGET_COMMAND_TYPES['create'], self.graphs[graph_id], 0, 0)
         # cur_plot["line"] = self.graphs[graph_id]["widget"].plot(cur_plot["x"], cur_plot["y"], name="TMOS Sensor")
@@ -196,6 +198,12 @@ class QtLivePlotterWorker(QtCore.QObject):
         cur_plot["x"][-1] = new_data['time']
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[TMOS_DATA_BIT_POS[graph_id]["pos"]]) - cur_plot["origin"]
+
+        if cur_plot["y"][-1] > cur_plot["maxy"]:
+            cur_plot["maxy"] = cur_plot["y"][-1]
+
+        if cur_plot["y"][-1] < cur_plot["miny"]:
+            cur_plot["miny"] = cur_plot["y"][-1]
 
         self.command_signal.emit(WIDGET_COMMAND_TYPES['update'], self.graphs[graph_id]["plot"], 0, 0)
         # cur_plot["line"].setData(cur_plot["x"], cur_plot["y"])
@@ -251,6 +259,7 @@ class QtLivePlotter(Dock):
         elif command == WIDGET_COMMAND_TYPES['update']:
             if 'line' in vobj:
                 vobj["line"].setData(vobj["x"], vobj["y"])
+                widget["widget"].setYRange(vobj["miny"], vobj["maxy"])
 
     @pyqtSlot()
     def set_origin(self):
