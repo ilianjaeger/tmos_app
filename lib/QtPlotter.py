@@ -199,10 +199,10 @@ class QtLivePlotterWorker(QtCore.QObject):
         cur_plot["y"][:-1] = cur_plot["y"][1:]
         cur_plot["y"][-1] = float(new_data['data'].split(',')[TMOS_DATA_BIT_POS[graph_id]["pos"]]) - cur_plot["origin"]
 
-        if cur_plot["y"][-1] > cur_plot["maxy"]:
+        if cur_plot["origin"] != 0.0 and cur_plot["y"][-1] > cur_plot["maxy"]:
             cur_plot["maxy"] = cur_plot["y"][-1]
 
-        if cur_plot["y"][-1] < cur_plot["miny"]:
+        if cur_plot["origin"] != 0.0 and cur_plot["y"][-1] < cur_plot["miny"]:
             cur_plot["miny"] = cur_plot["y"][-1]
 
         self.command_signal.emit(WIDGET_COMMAND_TYPES['update'], self.graphs[graph_id]["plot"], 0, 0)
