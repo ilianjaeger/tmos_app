@@ -182,9 +182,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.log_process = subprocess.Popen("python QtPlotter.py", stdin=subprocess.PIPE, stdout=None, encoding='utf-8')
         self.sensor_box_1.set_logger_process(self.log_process)
-        self.sensor_box_2.set_logger_process(self.log_process)
-        self.sensor_box_3.set_logger_process(self.log_process)
-        self.sensor_box_4.set_logger_process(self.log_process)
+        # self.sensor_box_2.set_logger_process(self.log_process)
+        # self.sensor_box_3.set_logger_process(self.log_process)
+        # self.sensor_box_4.set_logger_process(self.log_process)
 
     def update_com_ports(self):
         available_ports = list_available_ports()
