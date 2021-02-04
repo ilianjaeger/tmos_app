@@ -3,11 +3,12 @@ import socket
 import datetime
 
 from lib.template import GlobalInterface
-from vicon_dssdk import ViconDataStream
+from pyvicon import pyvicon
+from pyvicon.pyvicon import *
 
 # Start vicon logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('VICON.COMM')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 ################################################
@@ -26,7 +27,7 @@ class ViconInterface(GlobalInterface.GlobalInterface):
     def __init__(self):
         super(ViconInterface, self).__init__()
 
-        self._comm = ViconDataStream.Client()
+        self._comm = pyvicon.PyVicon()
         self._port = "192.168.10.1"
 
     def open_port(self, port):
@@ -41,35 +42,34 @@ class ViconInterface(GlobalInterface.GlobalInterface):
             logger.debug("Opening %s", str(port))
 
             if self._comm is None:
-                self._comm = ViconDataStream.Client()
+                self._comm = pyvicon.PyVicon()
 
             # The Connect function from the Vicon library is not thread safe. In order to check if it is possible
             # to connect to the camera system (IP reachable), try it with socket instead
             try:
                 s = socket.create_connection((port, 801), timeout=0.1)
-                s.close() # Don't forget to close it before trying it with the Vicon library!
+                s.close()  # Don't forget to close it before trying it with the Vicon library!
             except socket.timeout:
+                logger.debug("Socket error")
                 return False
 
             # Connect
-            self._comm.Connect(port)
+            self._comm.connect(port)
 
             # Failed connect
-            if not self._comm.IsConnected():
+            if not self._comm.is_connected():
                 return False
 
             logger.debug("Vicon connected!")
 
-            self._comm.SetStreamMode(ViconDataStream.Client.StreamMode.EServerPush)
-            self._comm.EnableSegmentData()
-            self._comm.EnableMarkerData()
-            self._comm.EnableUnlabeledMarkerData()
-            self._comm.EnableDeviceData()
-            # self._comm.SetAxisMapping(ViconDataStream.CoreClient.EForward, ViconDataStream.CoreClient.ELeft,
-            #                           ViconDataStream.CoreClient.EUp)
+            self._comm.set_stream_mode(pyvicon.StreamMode.ServerPush)
+            self._comm.enable_segment_data()
+            self._comm.enable_marker_data()
+            self._comm.enable_unlabeled_marker_data()
+            self._comm.enable_device_data()
 
             logger.debug("Vicon configuration complete!")
-        except ViconDataStream.DataStreamException:
+        except :
             self._comm = None
             return False
 
@@ -81,7 +81,7 @@ class ViconInterface(GlobalInterface.GlobalInterface):
             :returns:
                 Returns true if it is connected
         """
-        return self._comm is not None and self._comm.IsConnected()
+        return self._comm is not None and self._comm.is_connected()
 
     def stop_device(self):
         """ Stop reading
@@ -103,7 +103,7 @@ class ViconInterface(GlobalInterface.GlobalInterface):
                 Returns true if it is connected
         """
 
-        if not self.is_connected() or not self._comm.GetFrame():
+        if not self.is_connected() or not self._comm.get_frame():
             return False
         return True
 
@@ -116,8 +116,8 @@ class ViconInterface(GlobalInterface.GlobalInterface):
 
         if self.is_connected():
             try:
-                self._comm.Disconnect()
-            except ViconDataStream.DataStreamException:
+                self._comm.disconnect()
+            except :
                 self._comm = None
                 return False
 
@@ -134,18 +134,28 @@ class ViconInterface(GlobalInterface.GlobalInterface):
             return -1
 
         try:
-            if self._comm.GetFrame():
-                names = self._comm.GetSubjectNames()
+            ret = self._comm.get_frame()
+            logger.debug("Get frame: {}".format(ret))
+            if ret != 2:
+                count = self._comm.get_subject_count()
+                logger.debug("Get count: {}".format(count))
                 log_text = ''
-                for i in names:
-                    segment_names = self._comm.GetSegmentNames(i)
+                for i in range(0, count):
+                    segment_name = self._comm.get_subject_name(i)
+                    logger.debug("Get name: {}".format(segment_name))
                     elapsed_time_ms = str(int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000))
-                    for s in segment_names:
-                        pos = self._comm.GetSegmentGlobalTranslation(i, s)
-                        log_text = log_text + "{},{},{:.2f},{:.2f},{:.2f}\t".format(elapsed_time_ms, s, pos[0][0], pos[0][1], pos[0][2])
+                    pos = self._comm.get_segment_global_translation(segment_name, segment_name)
+                    logger.debug("Get name: {}".format(pos))
 
+                    if pos is not None:
+                        log_text = log_text + "{},{},{:.2f},{:.2f},{:.2f}\t".format(elapsed_time_ms, segment_name, pos[0], pos[1], pos[2])
+                    else:
+                        log_text = log_text + "{},{},0,0,0\t".format(elapsed_time_ms, segment_name)
+                    logger.debug("Done")
                 return log_text
-        except ViconDataStream.DataStreamException as e:
+            else:
+                logger.debug("Fehler")
+        except:
             pass
 
         return -1
@@ -163,8 +173,4 @@ class ViconInterface(GlobalInterface.GlobalInterface):
         if self._comm is None:
             return ''
 
-        ver = self._comm.GetVersion()
-        if type(ver) is not tuple and len(ver) < 3:
-            return "Unknown"
-
-        return str(ver[0]) + "." + str(ver[1]) + "." + str(ver[2])
+        return "linux_edition"

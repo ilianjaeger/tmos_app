@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set dark theme as default
         self.style_dark = load_style("style/dark.css")
-        self.change_style('dark')
+        # self.change_style('dark')
 
         # Update COM ports after initialization
         self.update_com_ports()
