@@ -36,8 +36,6 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         self._parity = 'N'
         self._stop_bits = 1
 
-        self.device_type = self.BOARD_TYPE['ev_kit']
-
     def open_port(self, port):
         """ Opens a port
 
@@ -56,12 +54,9 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             logger.debug("MCU connected!")
 
             self._comm.reset_input_buffer()  # flush buffer
-            self.identify_board()
-            self.stop_device()
 
         except serial.SerialException:
             self._comm = None
-            # self.emit_error_signal()
             return False
 
         return True
@@ -74,32 +69,6 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         """
         return self._comm is not None and self._comm.isOpen()
 
-    def identify_board(self):
-        """ Identify current board connected (EV-KIT or STM32)
-
-            :returns:
-                Type of board [BOARD_TYPE]
-        """
-        if not self.is_connected():
-            return False
-
-        try:
-            logger.debug("Identifying board...")
-            self._comm.write(b't')  # Send the type command
-            if (self.wait_for_text_timeout("OK", 1000)):
-                self.device_type = self.BOARD_TYPE["stm32"]
-                logger.info("STM32 Connected")
-            else:
-                self._comm.write(b'\r\n')
-                self.device_type = self.BOARD_TYPE["ev_kit"]
-                logger.info("EV-KIT Connected")
-
-        except serial.SerialException:
-            self._comm = None
-            return False
-
-        return True
-
     def stop_device(self):
         """ Stop reading
 
@@ -111,17 +80,10 @@ class SerialInterface(GlobalInterface.GlobalInterface):
 
         try:
             logger.debug("Stopping device")
-            if self.device_type == self.BOARD_TYPE["stm32"]:
-                self._comm.write(b'p')
-                if not self.wait_for_text_timeout("OK", 500):
-                    return False
-            else:
-                self._comm.write(b'STOP\r\n')  # Stop any ongoing reading
             self._comm.reset_input_buffer()  # flush buffer
 
         except serial.SerialException:
             self._comm = None
-            # self.emit_error_signal()
             return False
 
         return True
@@ -137,41 +99,17 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             return False
 
         try:
-            logger.debug("Stopping and resetting device")
-            if not self.stop_device():
-                return False
-
             # Connect only for the case of the ev-kit
-            if self.device_type == self.BOARD_TYPE["ev_kit"]:
-                logger.debug("Connecting")
-                # Send CONNECTED command and wait for ACK
-                self._comm.write(b'CONNECT\r\n')
+            logger.debug("Connecting")
 
-                # Sometimes it takes up to 3 seconds... :(
-                if not (self.wait_for_text_timeout("CONNECTED ", 3000) and self.wait_for_text_timeout(">", 3000)):
-                    logger.error("Could not connect to board")
-                    return False
-
-            # Send START command
-
-            if self.device_type == self.BOARD_TYPE["stm32"]:
-                self._comm.write(b's')
-                if not self.wait_for_text_timeout("OK", 500):
-                    logger.error("Could not start reading")
-                    return False
-            else:
-                self._comm.write(bytes("START {}\r\n".format(self._mode), 'utf8'))
-                if not self.wait_for_text_timeout("Start Measurements", 600):
-                    logger.error("Could not start reading")
-                    return False
+            ##
+                # Put your code here if you need to send something to start the device
+            ##
 
             logger.debug("Initialization complete!")
 
-            # time.sleep(1)
-
         except serial.SerialException:
             self._comm = None
-            # self.emit_error_signal()
             return False
 
         return True
@@ -188,7 +126,6 @@ class SerialInterface(GlobalInterface.GlobalInterface):
                 self._comm.close()
             except serial.SerialException:
                 self._comm = None
-                # self.emit_error_signal()
                 return False
 
         return True

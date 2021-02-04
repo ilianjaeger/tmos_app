@@ -164,17 +164,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         t0 = datetime.datetime.now()
 
-        self.sensor_box_1.start_button.click()
-        self.sensor_box_1.set_reference_time(t0)
-
-        self.sensor_box_2.start_button.click()
-        self.sensor_box_2.set_reference_time(t0)
-
-        self.sensor_box_3.start_button.click()
-        self.sensor_box_3.set_reference_time(t0)
-
-        self.sensor_box_4.start_button.click()
-        self.sensor_box_4.set_reference_time(t0)
+        self.sensor_box.start_button.click()
+        self.sensor_box.set_reference_time(t0)
 
         self.vicon_box.start_button.click()
         self.vicon_box.set_reference_time(t0)
@@ -182,10 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")
 
-        self.sensor_box_1.stop_button.click()
-        self.sensor_box_2.stop_button.click()
-        self.sensor_box_3.stop_button.click()
-        self.sensor_box_4.stop_button.click()
+        self.sensor_box.stop_button.click()
         self.vicon_box.stop_button.click()
 
     def save_config(self):
