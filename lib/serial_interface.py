@@ -29,8 +29,8 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         'stm32': 1
     }
 
-    def __init__(self, mode=0):
-        super(SerialInterface, self).__init__(mode)
+    def __init__(self):
+        super(SerialInterface, self).__init__()
 
         self._baudraute = 115200
         self._parity = 'N'
@@ -153,7 +153,6 @@ class SerialInterface(GlobalInterface.GlobalInterface):
                     return False
 
             # Send START command
-            logger.debug("Start sensor reading [MODE " + str(self._mode) + " - " + ("SLOW", "FAST")[self._mode] + "]")
 
             if self.device_type == self.BOARD_TYPE["stm32"]:
                 self._comm.write(b's')

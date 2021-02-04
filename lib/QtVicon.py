@@ -54,8 +54,8 @@ class QtVicon(QtWidgets.QGroupBox):
         self.IP_address_button.setEnabled(True)
         self.IP_address_button.clicked.connect(self.set_ip_button_clicked)
 
-        self.config_hbox.addWidget(self.IP_address_edit_label, 50)
-        self.config_hbox.addWidget(self.IP_address_edit, 30)
+        self.config_hbox.addWidget(self.IP_address_edit_label, 20)
+        self.config_hbox.addWidget(self.IP_address_edit, 60)
         self.config_hbox.addWidget(self.IP_address_button, 20)
 
         ''' CONNECT AND DISCONNECT BUTTONS '''

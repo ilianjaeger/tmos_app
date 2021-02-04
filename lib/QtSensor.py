@@ -9,7 +9,7 @@ from lib.template.GlobalThread import QtGlobalWorker
 
 
 class QtSensor(QtWidgets.QGroupBox):
-    def __init__(self, title, exp_name, mode=0, parent=None):
+    def __init__(self, title, exp_name, parent=None):
         super(QtSensor, self).__init__(parent)
 
         self.time_zero = datetime.datetime.now()
@@ -83,7 +83,7 @@ class QtSensor(QtWidgets.QGroupBox):
 
         ''' SERIAL WORKER (THREAD) '''
         # Worker
-        self.serial_worker = QtSerialWorker(title, exp_name, mode)
+        self.serial_worker = QtSerialWorker(title, exp_name)
 
         # Thread
         self.serial_thread = QtCore.QThread(self)
@@ -130,9 +130,6 @@ class QtSensor(QtWidgets.QGroupBox):
         self.logger.info('Stopping...')
         self.send_command('stop')
 
-    def change_mode(self, mode):
-        self.send_command('mode', str(mode))
-
     def change_file_handler(self, name):
         self.send_command('handler', str(name))
 
@@ -164,8 +161,6 @@ class QtSensor(QtWidgets.QGroupBox):
             self.serial_started(success)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['stopped']:
             self.serial_stopped(success)
-        elif resp == QtGlobalWorker.WORKER_RESPONSE['mode_changed']:
-            self.mode_changed(success, extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['handler_changed']:
             self.handler_changed(success, extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['log_data']:
@@ -222,12 +217,6 @@ class QtSensor(QtWidgets.QGroupBox):
 
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-
-    def mode_changed(self, success, extra):
-        if success:
-            self.logger.debug("Operation mode successfully updated! Mode set to " + extra)
-        else:
-            self.logger.error("Invalid mode selected! Invalid mode " + extra)
 
     def handler_changed(self, success, extra):
         if success:

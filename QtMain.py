@@ -37,21 +37,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.experiment_name = "Experiment 0"
         self.set_title()
 
-        self.style_dark = load_style("style/dark.css")
-
-        self.style_menu_dark = QtWidgets.QAction("Dark", self)
-        self.style_menu_dark.setStatusTip('Set to dark mode')
-        self.style_menu_dark.triggered.connect(lambda: self.change_style('dark'))
-
-        self.style_menu_classic = QtWidgets.QAction("Classic", self)
-        self.style_menu_classic.setStatusTip('Set to light mode')
-        self.style_menu_classic.triggered.connect(lambda: self.change_style('classic'))
-
-        main_menu = self.menuBar()
-        main_menu = main_menu.addMenu('Window')
-        main_menu.addAction(self.style_menu_dark)
-        main_menu.addAction(self.style_menu_classic)
-
         ''' WIDGET CONFIGURATION '''
         # Main Layout
         self.config_box = QtWidgets.QGroupBox(self)
@@ -74,13 +59,6 @@ class MainWindow(QtWidgets.QMainWindow):
         font.setBold(True)
         self.default_output_folder.setFont(font)
 
-        # Mode (8Hz or 32Hz)
-        self.mode_select_8 = QtWidgets.QRadioButton("8 Hz")
-        self.mode_select_32 = QtWidgets.QRadioButton("32 Hz")
-        self.mode_select_32.setChecked(True)
-        self.mode_select_label = QtWidgets.QLabel()
-        self.mode_select_label.setText("Mode")
-
         # Save button
         self.save_button = QtWidgets.QPushButton(self.config_box)
         self.save_button.setText('Save configuration')
@@ -94,25 +72,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config_layout.addWidget(self.experiment_name_label)
         self.config_layout.addWidget(self.default_output_folder)
         self.config_layout.addWidget(self.experiment_name_line)
-        self.config_layout.addWidget(self.mode_select_label)
-        self.config_layout.addWidget(self.mode_select_8)
-        self.config_layout.addWidget(self.mode_select_32)
 
         # Vicon instance
         self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
 
         # Sensors
-        self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_3 = QtSensor.QtSensor("Sensor 3", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_4 = QtSensor.QtSensor("Sensor 4", self.experiment_name, int(self.mode_select_32.isChecked()), self)
+        self.sensor_box = QtSensor.QtSensor("Drone", self.experiment_name, self)
 
         # Sensor horizontal layout
         self.sensor_layout = QtWidgets.QHBoxLayout()
-        self.sensor_layout.addWidget(self.sensor_box_1)
-        self.sensor_layout.addWidget(self.sensor_box_2)
-        self.sensor_layout.addWidget(self.sensor_box_3)
-        self.sensor_layout.addWidget(self.sensor_box_4)
+        self.sensor_layout.addWidget(self.sensor_box)
+        self.sensor_layout.addWidget(self.vicon_box)
 
         # Start button
         self.start_all_button = QtWidgets.QPushButton(self)
@@ -145,7 +115,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
         root_layout.addWidget(self.config_box)
-        root_layout.addWidget(self.vicon_box)
         root_layout.addLayout(self.sensor_layout)
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(self.log_text_box)
@@ -161,53 +130,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_central_widget.setLayout(root_layout)
         self.scroll.setWidget(self.main_central_widget)
 
-        # Docking area
-        self.dock_area = DockArea()
-
-        # Dock for the main window
-        self.main_dock = Dock("Main configuration")
-        self.main_dock.addWidget(self.scroll)
-
-        # Add docks to dock area
-        self.dock_area.addDock(self.main_dock)
-
         # Set dock area as main window central widget
-        self.setCentralWidget(self.dock_area)
+        self.setCentralWidget(self.scroll)
 
         # Set dark theme as default
+        self.style_dark = load_style("style/dark.css")
         self.change_style('dark')
 
         # Update COM ports after initialization
         self.update_com_ports()
 
-        self.log_process = subprocess.Popen("python QtPlotter.py", stdin=subprocess.PIPE, stdout=None, encoding='utf-8')
-        self.sensor_box_1.set_logger_process(self.log_process)
-        # self.sensor_box_2.set_logger_process(self.log_process)
-        # self.sensor_box_3.set_logger_process(self.log_process)
-        # self.sensor_box_4.set_logger_process(self.log_process)
-
     def update_com_ports(self):
         available_ports = list_available_ports()
-        self.sensor_box_1.update_com_port_list(available_ports)
-        self.sensor_box_2.update_com_port_list(available_ports)
-        self.sensor_box_3.update_com_port_list(available_ports)
-        self.sensor_box_4.update_com_port_list(available_ports)
+        self.sensor_box.update_com_port_list(available_ports)
 
     def adjust_widget_size(self):
         self.main_central_widget.adjustSize()
         self.resize(self.main_central_widget.sizeHint())
 
     def set_title(self):
-        self.setWindowTitle("TMOS App - " + self.experiment_name)
-
-    def set_icons(self):
-        # Set icon
-        app_icon = QtGui.QIcon()
-        app_icon.addFile('img/motion_sensor_16.png', QtCore.QSize(16, 16))
-        app_icon.addFile('img/motion_sensor_24.png', QtCore.QSize(24, 24))
-        app_icon.addFile('img/motion_sensor_32.png', QtCore.QSize(32, 32))
-        app_icon.addFile('img/motion_sensor_64.png', QtCore.QSize(64, 64))
-        self.setWindowIcon(app_icon)
+        self.setWindowTitle("Ilian's App - " + self.experiment_name)
 
     def change_style(self, style):
         if style == 'dark':
@@ -264,19 +206,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
             self.set_title()
-            self.sensor_box_1.change_file_handler(self.experiment_name)
-            self.sensor_box_2.change_file_handler(self.experiment_name)
-            self.sensor_box_3.change_file_handler(self.experiment_name)
-            self.sensor_box_4.change_file_handler(self.experiment_name)
+            self.sensor_box.change_file_handler(self.experiment_name)
             self.vicon_box.change_file_handler(self.experiment_name)
-
-            # Change operation mode
-            op_mode = int(self.mode_select_32.isChecked())
-            self.sensor_box_1.change_mode(op_mode)
-            self.sensor_box_2.change_mode(op_mode)
-            self.sensor_box_3.change_mode(op_mode)
-            self.sensor_box_4.change_mode(op_mode)
-            self.vicon_box.change_mode(op_mode)
 
             logging.info("Configuration successfully saved!")
 
