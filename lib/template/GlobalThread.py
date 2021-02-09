@@ -24,7 +24,6 @@ class QtGlobalWorker(QtCore.QObject):
         'disconnect': 2,
         'start': 3,
         'stop': 4,
-        'mode': 5,
         'handler': 6,
         'console': 7
     }
@@ -36,7 +35,6 @@ class QtGlobalWorker(QtCore.QObject):
         'disconnected': 2,
         'started': 3,
         'stopped': 4,
-        'mode_changed': 5,
         'handler_changed': 6,
         'log_data': 7
     }
@@ -98,8 +96,6 @@ class QtGlobalWorker(QtCore.QObject):
             self.start_read()
         elif command == self.WORKER_COMMAND['stop']:
             self.stop_read()
-        elif command == self.WORKER_COMMAND['mode']:
-            self.change_mode(arg)
         elif command == self.WORKER_COMMAND['handler']:
             self.change_log_handler(arg)
         elif command == self.WORKER_COMMAND['console']:
@@ -137,9 +133,6 @@ class QtGlobalWorker(QtCore.QObject):
     def stop_read(self):
         self.emit_response('stopped', self._interface.stop_device(), "")
         self._read_timer.stop()
-
-    def change_mode(self, mode):
-        self.emit_response('mode_changed', self._interface.set_mode(int(mode)), "[{}]".format(mode))
 
     def change_log_handler(self, exp_name):
         if exp_name == self._exp_name:

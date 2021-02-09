@@ -29,8 +29,8 @@ class SerialInterface(GlobalInterface.GlobalInterface):
         'stm32': 1
     }
 
-    def __init__(self, mode=0):
-        super(SerialInterface, self).__init__(mode)
+    def __init__(self):
+        super(SerialInterface, self).__init__()
 
         self._baudraute = 115200
         self._parity = 'N'

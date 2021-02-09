@@ -6,8 +6,8 @@ class QtSerialWorker(QtGlobalWorker):
     """ Main serial worker
     """
 
-    def __init__(self, title, exp_name, mode=0):
+    def __init__(self, title, exp_name):
         # Initialize with an interval of 0 => Read sensor as soon/fast as possible
         super().__init__(title, exp_name, 0, QtGlobalWorker.DATA_TYPES['tmos'])
 
-        self._interface = SerialInterface(mode)
+        self._interface = SerialInterface()

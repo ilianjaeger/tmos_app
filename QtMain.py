@@ -74,13 +74,6 @@ class MainWindow(QtWidgets.QMainWindow):
         font.setBold(True)
         self.default_output_folder.setFont(font)
 
-        # Mode (8Hz or 32Hz)
-        self.mode_select_8 = QtWidgets.QRadioButton("8 Hz")
-        self.mode_select_32 = QtWidgets.QRadioButton("32 Hz")
-        self.mode_select_32.setChecked(True)
-        self.mode_select_label = QtWidgets.QLabel()
-        self.mode_select_label.setText("Mode")
-
         # Save button
         self.save_button = QtWidgets.QPushButton(self.config_box)
         self.save_button.setText('Save configuration')
@@ -94,25 +87,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config_layout.addWidget(self.experiment_name_label)
         self.config_layout.addWidget(self.default_output_folder)
         self.config_layout.addWidget(self.experiment_name_line)
-        self.config_layout.addWidget(self.mode_select_label)
-        self.config_layout.addWidget(self.mode_select_8)
-        self.config_layout.addWidget(self.mode_select_32)
 
         # Vicon instance
         self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
 
         # Sensors
-        self.sensor_box_1 = QtSensor.QtSensor("Sensor 1", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_2 = QtSensor.QtSensor("Sensor 2", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_3 = QtSensor.QtSensor("Sensor 3", self.experiment_name, int(self.mode_select_32.isChecked()), self)
-        self.sensor_box_4 = QtSensor.QtSensor("Sensor 4", self.experiment_name, int(self.mode_select_32.isChecked()), self)
+        self.sensor_box = QtSensor.QtSensor("TMOS STM32", self.experiment_name, self)
 
         # Sensor horizontal layout
         self.sensor_layout = QtWidgets.QHBoxLayout()
-        self.sensor_layout.addWidget(self.sensor_box_1)
-        self.sensor_layout.addWidget(self.sensor_box_2)
-        self.sensor_layout.addWidget(self.sensor_box_3)
-        self.sensor_layout.addWidget(self.sensor_box_4)
+        self.sensor_layout.addWidget(self.sensor_box)
+        self.sensor_layout.addWidget(self.vicon_box)
 
         # Start button
         self.start_all_button = QtWidgets.QPushButton(self)
@@ -145,7 +130,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Main vertical Layout
         root_layout = QtWidgets.QVBoxLayout()
         root_layout.addWidget(self.config_box)
-        root_layout.addWidget(self.vicon_box)
         root_layout.addLayout(self.sensor_layout)
         root_layout.addLayout(start_stop_layout)
         root_layout.addWidget(self.log_text_box)
@@ -161,18 +145,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_central_widget.setLayout(root_layout)
         self.scroll.setWidget(self.main_central_widget)
 
-        # Docking area
-        self.dock_area = DockArea()
-
-        # Dock for the main window
-        self.main_dock = Dock("Main configuration")
-        self.main_dock.addWidget(self.scroll)
-
-        # Add docks to dock area
-        self.dock_area.addDock(self.main_dock)
-
-        # Set dock area as main window central widget
-        self.setCentralWidget(self.dock_area)
+        # Set scroll area as main window central widget
+        self.setCentralWidget(self.scroll)
 
         # Set dark theme as default
         self.change_style('dark')
@@ -181,24 +155,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_com_ports()
 
         self.log_process = subprocess.Popen("python QtPlotter.py", stdin=subprocess.PIPE, stdout=None, encoding='utf-8')
-        self.sensor_box_1.set_logger_process(self.log_process)
-        # self.sensor_box_2.set_logger_process(self.log_process)
-        # self.sensor_box_3.set_logger_process(self.log_process)
-        # self.sensor_box_4.set_logger_process(self.log_process)
+        self.sensor_box.set_logger_process(self.log_process)
 
     def update_com_ports(self):
         available_ports = list_available_ports()
-        self.sensor_box_1.update_com_port_list(available_ports)
-        self.sensor_box_2.update_com_port_list(available_ports)
-        self.sensor_box_3.update_com_port_list(available_ports)
-        self.sensor_box_4.update_com_port_list(available_ports)
+        self.sensor_box.update_com_port_list(available_ports)
 
     def adjust_widget_size(self):
         self.main_central_widget.adjustSize()
         self.resize(self.main_central_widget.sizeHint())
 
     def set_title(self):
-        self.setWindowTitle("TMOS App - " + self.experiment_name)
+        self.setWindowTitle("TMOS STM32 App - " + self.experiment_name)
 
     def set_icons(self):
         # Set icon
@@ -222,17 +190,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         t0 = datetime.datetime.now()
 
-        self.sensor_box_1.start_button.click()
-        self.sensor_box_1.set_reference_time(t0)
-
-        self.sensor_box_2.start_button.click()
-        self.sensor_box_2.set_reference_time(t0)
-
-        self.sensor_box_3.start_button.click()
-        self.sensor_box_3.set_reference_time(t0)
-
-        self.sensor_box_4.start_button.click()
-        self.sensor_box_4.set_reference_time(t0)
+        self.sensor_box.start_button.click()
+        self.sensor_box.set_reference_time(t0)
 
         self.vicon_box.start_button.click()
         self.vicon_box.set_reference_time(t0)
@@ -240,10 +199,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")
 
-        self.sensor_box_1.stop_button.click()
-        self.sensor_box_2.stop_button.click()
-        self.sensor_box_3.stop_button.click()
-        self.sensor_box_4.stop_button.click()
+        self.sensor_box.stop_button.click()
         self.vicon_box.stop_button.click()
 
     def save_config(self):
@@ -264,21 +220,14 @@ class MainWindow(QtWidgets.QMainWindow):
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
             self.set_title()
-            self.sensor_box_1.change_file_handler(self.experiment_name)
-            self.sensor_box_2.change_file_handler(self.experiment_name)
-            self.sensor_box_3.change_file_handler(self.experiment_name)
-            self.sensor_box_4.change_file_handler(self.experiment_name)
+            self.sensor_box.change_file_handler(self.experiment_name)
             self.vicon_box.change_file_handler(self.experiment_name)
 
-            # Change operation mode
-            op_mode = int(self.mode_select_32.isChecked())
-            self.sensor_box_1.change_mode(op_mode)
-            self.sensor_box_2.change_mode(op_mode)
-            self.sensor_box_3.change_mode(op_mode)
-            self.sensor_box_4.change_mode(op_mode)
-            self.vicon_box.change_mode(op_mode)
-
             logging.info("Configuration successfully saved!")
+
+    def clean(self):
+        if self.log_process is not None:
+            self.log_process.terminate()
 
 
 if __name__ == '__main__':
@@ -294,3 +243,6 @@ if __name__ == '__main__':
     main_window.adjust_widget_size()
 
     app.exec_()
+
+    # Clean everything
+    main_window.clean()
