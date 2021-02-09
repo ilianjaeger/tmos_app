@@ -145,19 +145,17 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             recv = self.read_text()
             while recv != '':
 
-                list_data = recv.split('\t')  # Data separated by tabs
+                list_data = recv.split(',')  # Data separated by tabs
                 n = len(list_data)  # Number of elements
 
-                # We always receive 10 data elements
-                if n != 10:
+                # We always receive 6 data elements
+                if n != 6:
                     logger.debug("Wrong data received! Skipping [{}]".format(n))
                     return ''
 
-                # list_data = list_data[1:n - 1]  # First and last elements are garbage
-                list_data = list_data[0:n - 1]
-                list_data[0] = str(int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000))
+                cur_time_diff = str(int((datetime.datetime.now() - self._time_zero).total_seconds() * 1000))
 
-                log_text = log_text + ','.join(map(str, list_data)) + '\t'
+                log_text = log_text + cur_time_diff + "," + recv + '\t'
 
                 recv = self.read_text()
 
