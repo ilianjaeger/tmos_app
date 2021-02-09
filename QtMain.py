@@ -77,12 +77,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vicon_box = QtVicon.QtVicon("Vicon", self.experiment_name)
 
         # Sensors
-        self.sensor_box = QtSensor.QtSensor("Drone", self.experiment_name, self)
+        self.log_sensor_box = QtSensor.QtSensor("LOGGING", self.experiment_name, self)
+        self.range_sensor_box = QtSensor.QtSensor("RANGING", self.experiment_name, self)
 
         # Sensor horizontal layout
         self.sensor_layout = QtWidgets.QHBoxLayout()
-        self.sensor_layout.addWidget(self.sensor_box)
         self.sensor_layout.addWidget(self.vicon_box)
+        self.sensor_layout.addWidget(self.log_sensor_box)
+        self.sensor_layout.addWidget(self.range_sensor_box)
 
         # Start button
         self.start_all_button = QtWidgets.QPushButton(self)
@@ -142,7 +144,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_com_ports(self):
         available_ports = list_available_ports()
-        self.sensor_box.update_com_port_list(available_ports)
+        self.log_sensor_box.update_com_port_list(available_ports)
+        self.range_sensor_box.update_com_port_list(available_ports)
 
     def adjust_widget_size(self):
         self.main_central_widget.adjustSize()
@@ -164,8 +167,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         t0 = datetime.datetime.now()
 
-        self.sensor_box.start_button.click()
-        self.sensor_box.set_reference_time(t0)
+        self.log_sensor_box.start_button.click()
+        self.log_sensor_box.set_reference_time(t0)
+
+        self.range_sensor_box.start_button.click()
+        self.range_sensor_box.set_reference_time(t0)
 
         self.vicon_box.start_button.click()
         self.vicon_box.set_reference_time(t0)
@@ -173,7 +179,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def stop_all_button_clicked(self):
         logging.info("Stopping all connected devices")
 
-        self.sensor_box.stop_button.click()
+        self.log_sensor_box.stop_button.click()
+        self.range_sensor_box.stop_button.click()
         self.vicon_box.stop_button.click()
 
     def save_config(self):
@@ -194,7 +201,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # Change file handlers
             self.experiment_name = self.experiment_name_line.text()
             self.set_title()
-            self.sensor_box.change_file_handler(self.experiment_name)
+            self.log_sensor_box.change_file_handler(self.experiment_name)
+            self.range_sensor_box.change_file_handler(self.experiment_name)
             self.vicon_box.change_file_handler(self.experiment_name)
 
             logging.info("Configuration successfully saved!")
