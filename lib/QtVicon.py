@@ -152,9 +152,6 @@ class QtVicon(QtWidgets.QGroupBox):
         self.logger.info('Stopping...')
         self.send_command('stop')
 
-    def change_mode(self, mode):
-        self.send_command('mode', str(mode))
-
     def change_file_handler(self, name):
         self.send_command('handler', str(name))
 
@@ -174,8 +171,6 @@ class QtVicon(QtWidgets.QGroupBox):
             self.vicon_started(success)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['stopped']:
             self.vicon_stopped(success)
-        elif resp == QtGlobalWorker.WORKER_RESPONSE['mode_changed']:
-            self.mode_changed(success, extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['handler_changed']:
             self.handler_changed(success, extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['log_data']:
@@ -240,12 +235,6 @@ class QtVicon(QtWidgets.QGroupBox):
         self.stop_button.setEnabled(False)
         self.IP_address_edit.setEnabled(False)
         self.IP_address_button.setEnabled(False)
-
-    def mode_changed(self, success, extra):
-        if success:
-            self.logger.debug("Operation mode successfully updated! Mode set to " + extra)
-        else:
-            self.logger.error("Invalid mode selected! Invalid mode " + extra)
 
     def handler_changed(self, success, extra):
         if success:

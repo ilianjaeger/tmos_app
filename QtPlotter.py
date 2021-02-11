@@ -32,8 +32,10 @@ class QtLivePlotter(QtWidgets.QMainWindow):
 
     TMOS_DATA_BIT_POS = {
         'time': {"pos": 0, "title": "PC time"},
-        'data_1': {"pos": 1, "title": "TMOS 1"},
-        'data_2': {"pos": 2, "title": "TMOS 2"}
+        'temp_1': {"pos": 1, "title": "temp TMOS 1"},
+        'temp_2': {"pos": 2, "title": "temp TMOS 2"},
+        'data_1': {"pos": 3, "title": "TMOS 1"},
+        'data_2': {"pos": 4, "title": "TMOS 2"}
     }
 
     NUM_DATA_POINTS = 100
