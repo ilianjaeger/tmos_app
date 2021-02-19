@@ -197,7 +197,6 @@ class QtSensor(QtWidgets.QGroupBox):
     def is_connected(self):
         return self.disconnect_button.isEnabled()
 
-
     def serial_error_signal(self):
         self.logger.error("Serial error! Resetting...")
 

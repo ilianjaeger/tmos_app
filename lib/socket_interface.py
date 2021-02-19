@@ -80,7 +80,6 @@ class SocketInterface(GlobalInterface.GlobalInterface):
             return -1
 
         log_text = self.read_text()
-        log_text = "RIGHT,1.23,6"
 
         return log_text
 
