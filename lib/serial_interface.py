@@ -49,7 +49,7 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             logger.debug("MCU connected!")
 
             self._comm.reset_input_buffer()  # flush buffer
-            self.stop_device()
+            # self.stop_device()
 
         except serial.SerialException:
             self._comm = None
@@ -99,14 +99,14 @@ class SerialInterface(GlobalInterface.GlobalInterface):
             return False
 
         try:
-            logger.debug("Stopping and resetting device")
-            if not self.stop_device():
-                return False
+            # logger.debug("Stopping and resetting device")
+            # if not self.stop_device():
+            #     return False
 
-            self._comm.write(b's')
-            if not self.wait_for_text_timeout("OK", 500):
-                logger.error("Could not start reading")
-                return False
+            # self._comm.write(b's')
+            # if not self.wait_for_text_timeout("OK", 500):
+            #     logger.error("Could not start reading")
+            #     return False
 
             logger.debug("Initialization complete!")
 
