@@ -30,7 +30,8 @@ class QtGlobalWorker(QtCore.QObject):
         'error': -1,
         'connected': 1,
         'disconnected': 2,
-        'log_data': 3
+        'log_data': 3,
+        'set_data': 4
     }
 
     _worker_response = QtCore.pyqtSignal(int, bool, str)
@@ -73,6 +74,8 @@ class QtGlobalWorker(QtCore.QObject):
             self.emit_response('error', True, "Lost connection or empty frame! Stopping...")
             self.disconnect()
         elif type(data) == str and data != '':
+            self.emit_response('set_data', True, data)
+
             if self._log_to_console:
                 self.emit_response('log_data', True, data)
 

@@ -6,7 +6,7 @@ from lib.template import GlobalInterface
 
 # Start serial logger - Global logger, since there are multiple instances of the SerialInterface class
 logger = logging.getLogger('PC.COMM')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 ################################################
@@ -24,6 +24,7 @@ class SocketInterface(GlobalInterface.GlobalInterface):
     def __init__(self):
         super(SocketInterface, self).__init__()
 
+        self.count = 0
         self._comm = None
 
     def open_port(self, port):
@@ -36,12 +37,15 @@ class SocketInterface(GlobalInterface.GlobalInterface):
         self._port = port
         logger.debug("Opening %s", str(port))
         try:
-            self._comm = socket.create_connection((port, 80), timeout=0.1)
+            self._comm = socket.create_connection((port, 8002), timeout=0.1)
         except socket.timeout:
             self._comm = None
             return False
 
         logger.debug("MCU connected!")
+
+        # Reset # people
+        self.count = 0
 
         return True
 
@@ -76,6 +80,7 @@ class SocketInterface(GlobalInterface.GlobalInterface):
             return -1
 
         log_text = self.read_text()
+        log_text = "RIGHT,1.23,6"
 
         return log_text
 

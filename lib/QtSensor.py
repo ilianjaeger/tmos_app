@@ -1,7 +1,7 @@
 import logging
 import datetime
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import pyqtSlot
 
 from lib.QtSocketThread import QtSocketWorker
@@ -77,10 +77,30 @@ class QtSensor(QtWidgets.QGroupBox):
         self.console_log_check.setChecked(False)
         self.console_log_check.stateChanged.connect(self.console_log_changed)
 
+        ''' LABEL FOR DIRECTION '''
+        self.direction_label = QtWidgets.QLabel()
+        self.direction_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.direction_label.setStyleSheet("font-size: 60px; color: red;")
+        self.direction_label.setText("LEFT")
+
+        ''' LABEL FOR SPEED '''
+        self.speed_label = QtWidgets.QLabel()
+        self.speed_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.speed_label.setStyleSheet("font-size: 60px; color: white;")
+        self.speed_label.setText("20 m/s")
+
+        ''' LABEL FOR COUNT '''
+        self.count_label = QtWidgets.QLabel()
+        self.count_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.count_label.setStyleSheet("font-size: 60px; color: white;")
+        self.count_label.setText("COUNT: 1")
+
         ''' ADD LAYOUTS/WIDGETS '''
         self.root_layout.addLayout(self.config_hbox)
         self.root_layout.addLayout(self.hbox_connect_disconnect_buttons)
         self.root_layout.addWidget(self.console_log_check)
+        self.root_layout.addWidget(self.direction_label)
+        self.root_layout.addWidget(self.speed_label)
 
         ''' SOCKET WORKER (THREAD) '''
         # Worker
@@ -128,6 +148,8 @@ class QtSensor(QtWidgets.QGroupBox):
             self.socket_disconnected(success)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['log_data']:
             self.log_data(extra)
+        elif resp == QtGlobalWorker.WORKER_RESPONSE['set_data']:
+            self.set_data(extra)
         elif resp == QtGlobalWorker.WORKER_RESPONSE['error']:
             self.log_error(extra)
 
@@ -155,6 +177,16 @@ class QtSensor(QtWidgets.QGroupBox):
         self.disconnect_button.setEnabled(False)
         self.IP_address_edit.setEnabled(True)
         self.IP_address_button.setEnabled(True)
+
+    def set_data(self, data):
+        data_array = data.split(',')
+        if len(data_array) >= 3:
+            self.direction_label.setText(data_array[0])
+            self.speed_label.setText(data_array[1] + " m/s")
+            self.count_label.setText(data_array[2])
+
+        data_string = "[ACTIVITY] {}, {} m/s, COUNT: {}".format(data_array[0], data_array[1], data_array[2])
+        self.logger.info(data_string)
 
     def log_data(self, data):
         self.logger.info(data)
