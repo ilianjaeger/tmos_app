@@ -81,19 +81,19 @@ class QtSensor(QtWidgets.QGroupBox):
         self.direction_label = QtWidgets.QLabel()
         self.direction_label.setAlignment(QtCore.Qt.AlignCenter)
         self.direction_label.setStyleSheet("font-size: 60px; color: red;")
-        self.direction_label.setText("LEFT")
+        self.direction_label.setText("-")
 
         ''' LABEL FOR SPEED '''
         self.speed_label = QtWidgets.QLabel()
         self.speed_label.setAlignment(QtCore.Qt.AlignCenter)
         self.speed_label.setStyleSheet("font-size: 60px; color: white;")
-        self.speed_label.setText("20 m/s")
+        self.speed_label.setText("-")
 
         ''' LABEL FOR COUNT '''
         self.count_label = QtWidgets.QLabel()
         self.count_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.count_label.setStyleSheet("font-size: 60px; color: white;")
-        self.count_label.setText("COUNT: 1")
+        self.count_label.setStyleSheet("font-size: 40px; color: white;")
+        self.count_label.setText("COUNT: 0")
 
         ''' ADD LAYOUTS/WIDGETS '''
         self.root_layout.addLayout(self.config_hbox)
@@ -101,6 +101,7 @@ class QtSensor(QtWidgets.QGroupBox):
         self.root_layout.addWidget(self.console_log_check)
         self.root_layout.addWidget(self.direction_label)
         self.root_layout.addWidget(self.speed_label)
+        self.root_layout.addWidget(self.count_label)
 
         ''' SOCKET WORKER (THREAD) '''
         # Worker
@@ -183,7 +184,7 @@ class QtSensor(QtWidgets.QGroupBox):
         if len(data_array) >= 3:
             self.direction_label.setText(data_array[0])
             self.speed_label.setText(data_array[1] + " m/s")
-            self.count_label.setText(data_array[2])
+            self.count_label.setText("COUNT: " + data_array[2])
 
         data_string = "[ACTIVITY] {}, {} m/s, COUNT: {}".format(data_array[0], data_array[1], data_array[2])
         self.logger.info(data_string)
